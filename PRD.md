@@ -1,8 +1,8 @@
 # DevDiary - Product Requirements Document
 
-**Version:** 0.1 (Draft)  
+**Version:** 0.2  
 **Datum:** 2024-12-03  
-**Status:** Initial Draft
+**Status:** Implementation Ready
 
 ---
 
@@ -103,9 +103,10 @@ DevDiary ist eine native macOS-App, die automatisch die tägliche Entwicklungsar
 - **Language:** Swift 5.9+
 - **UI Framework:** SwiftUI
 - **Database:** SQLite (via SQLite.swift)
-- **Git Integration:** libgit2 oder direct shell commands
-- **File System:** FSEvents API
-- **Process Monitoring:** NSWorkspace
+- **Git Integration:** Shell Commands via Process API
+- **Localization:** String Catalogs (Deutsch + English)
+- **Distribution:** Direct Download (unsandboxed)
+- **Updates:** Sparkle Framework
 
 ### 4.2 Kern-Komponenten
 
@@ -275,43 +276,205 @@ Tabs:
 
 ---
 
-## 9. Offene Fragen
+## 9. Technische Entscheidungen (Resolved)
 
-1. **Git-Integration:** libgit2 vs. Shell Commands? (Performance vs. Einfachheit)
-2. **AI-Feature:** Lokales Model oder optionale Cloud-API als Fallback?
-3. **Pricing:** Kostenlos vs. Freemium (AI-Features kostenpflichtig)?
-4. **Distribution:** Mac App Store vs. Direct Download vs. Homebrew?
-5. **Update Mechanism:** Sparkle Framework oder manuell?
-6. **Sandboxing:** App Store-kompatibel (sandboxed) oder unrestricted?
-7. **IDE-Integration:** Notwendig für MVP oder erst v2.0?
+| Frage | Entscheidung | Begründung |
+|-------|--------------|------------|
+| Git-Integration | Shell Commands | Einfacher zu implementieren, Git ist ohnehin installiert |
+| Distribution | Direct Download | Voller Dateisystem-Zugriff ohne Sandbox-Einschränkungen |
+| Sandboxing | Unsandboxed | Notwendig für freien Zugriff auf Git-Repos |
+| Update Mechanism | Sparkle Framework | Standard für macOS Direct-Download Apps |
+| UI-Sprache | Lokalisiert (DE/EN) | Größere Zielgruppe, interne Entwickler benötigen Deutsch |
+| FSEvents/File Monitoring | Post-MVP | Reduziert MVP-Komplexität, Git-Tracking reicht für v1.0 |
+| IDE-Integration | Post-MVP (v2.0+) | Fokus auf Kernfunktionalität zuerst |
+
+### Offene Fragen (Post-MVP)
+- AI-Feature: Lokales Model (llama.cpp) vs. optionale Cloud-API?
+- Pricing: Kostenlos vs. Freemium?
 
 ---
 
-## 10. Roadmap (Grob)
+## 10. Detaillierte Implementierungs-Roadmap
 
-### Phase 1: MVP (3-4 Monate)
-- Woche 1-2: Architecture & Core Setup
-- Woche 3-4: Repository Tracking Implementation
-- Woche 5-6: File System Monitoring
-- Woche 7-8: Database & Models
-- Woche 9-10: UI Development (Menubar + Main Window)
-- Woche 11-12: Testing & Bug Fixing
-- Woche 13-14: Beta Release
+### Milestone 1: Foundation (Woche 1-2)
+**Ziel:** Lauffähige App-Struktur mit Datenbank
 
-### Phase 2: Polish & Feedback (1-2 Monate)
-- Beta-Testing mit 50-100 Entwicklern
-- Bug Fixes & UX Improvements
-- Performance Optimization
+**M1.1 - Projekt-Setup**
+- SwiftUI App mit Menubar-Integration (NSStatusItem)
+- App-Icon und grundlegendes Branding
+- Lokalisierung Setup (String Catalogs für DE/EN)
+- Logging-Infrastruktur (os.log)
 
-### Phase 3: AI Features (2-3 Monate)
-- LLM Integration
-- Summary Generation
-- Advanced Analytics
+**M1.2 - Datenbank-Layer**
+- SQLite.swift Integration
+- Schema-Migration-System für zukünftige Updates
+- DatabaseManager mit CRUD-Operationen
+- Models: Project, Session, Commit
 
-### Phase 4: Launch (1 Monat)
-- Marketing Materials
-- Documentation
-- Public Release
+**Deliverable:** App startet, zeigt Menubar-Icon, Datenbank ist funktional
+
+---
+
+### Milestone 2: Git Integration (Woche 3-4)
+**Ziel:** Commits aus Git-Repositories auslesen
+
+**M2.1 - GitService**
+- Shell Command Wrapper (Process API)
+- `git log` parsing (Commits mit Hash, Message, Author, Timestamp)
+- `git diff --stat` für Additions/Deletions
+- Branch-Detection (`git branch --show-current`)
+- Error Handling für nicht-Git-Verzeichnisse
+
+**M2.2 - Repository Discovery**
+- Scan von Standard-Verzeichnissen: ~/Developer, ~/Projects, ~/Code, ~/Documents
+- Rekursive Suche nach .git Ordnern (max. Tiefe: 3)
+- Manuelles Hinzufügen von Repos via Drag & Drop oder Folder Picker
+- Speicherung in Datenbank mit is_tracked Flag
+
+**M2.3 - Commit Polling**
+- Timer-basiertes Polling (alle 60 Sekunden)
+- Vergleich mit zuletzt bekanntem Commit-Hash
+- Neue Commits in Datenbank speichern
+- Background-Thread für Git-Operationen
+
+**Deliverable:** App erkennt Repos, liest Commits, speichert in DB
+
+---
+
+### Milestone 3: Session Management (Woche 5-6)
+**Ziel:** Arbeitszeit-Tracking basierend auf Git-Aktivität
+
+**M3.1 - Session-Logik**
+- Session startet bei erstem Commit des Tages
+- Session endet nach 15 Minuten Inaktivität (konfigurierbar)
+- Automatische Zuordnung: Commit → Session → Project
+- Berechnung der Session-Dauer
+
+**M3.2 - ActivityTracker**
+- Zentrale Komponente für Session-State-Management
+- Observer-Pattern für UI-Updates
+- Persistierung des aktiven Session-Status (App-Neustart)
+
+**M3.3 - Statistik-Berechnung**
+- Tages-Statistiken: Commits, aktive Zeit, Projekte
+- Projekt-Statistiken: Commits pro Projekt, Zeit pro Projekt
+- StatisticsService für Aggregation
+
+**Deliverable:** Sessions werden automatisch erkannt und getrackt
+
+---
+
+### Milestone 4: Menubar UI (Woche 7-8)
+**Ziel:** Quick View mit Tages-Übersicht
+
+**M4.1 - Menubar-Integration**
+- NSStatusItem mit Custom Icon
+- Popover mit SwiftUI Content
+- Keyboard Shortcut zum Öffnen (⌘⇧D)
+
+**M4.2 - Quick View Design**
+- Tages-Summary: Zeit, Commits, aktives Projekt
+- Letzter Commit mit Message und Zeitstempel
+- "Open Dashboard" und "Settings" Buttons
+- Live-Updates bei neuen Commits
+
+**M4.3 - Lokalisierung**
+- Alle UI-Strings in String Catalog
+- Deutsche Übersetzungen
+- Plural-Handling (1 Commit vs. 5 Commits)
+- Datums-/Zeitformatierung nach Locale
+
+**Deliverable:** Funktionale Menubar-App mit Quick View
+
+---
+
+### Milestone 5: Main Dashboard (Woche 9-10)
+**Ziel:** Detaillierte Ansichten und Konfiguration
+
+**M5.1 - Dashboard Window**
+- Separates NSWindow (öffnet aus Menubar)
+- Tab-Navigation: Today, History, Projects, Settings
+- Window-Position merken
+
+**M5.2 - Today View**
+- Timeline der heutigen Sessions
+- Commit-Liste mit Details (klappbar)
+- Projekt-Wechsel visualisiert
+- Echtzeit-Updates
+
+**M5.3 - History View**
+- Kalender-Navigation (letzte 30 Tage)
+- Tages-Auswahl zeigt Details
+- Einfache Statistiken pro Tag
+
+**M5.4 - Projects View**
+- Liste aller getrackten Repositories
+- Toggle: Tracking an/aus
+- Statistiken pro Projekt
+- "Add Repository" Button
+
+**M5.5 - Settings View**
+- Allgemein: Launch at Login, Sprache
+- Tracking: Poll-Intervall, Session-Timeout
+- Privacy: Excluded Paths, Data Retention
+- About: Version, Lizenz, Update-Check
+
+**Deliverable:** Vollständiges Dashboard mit allen Views
+
+---
+
+### Milestone 6: Polish & Beta (Woche 11-12)
+**Ziel:** Release-Qualität erreichen
+
+**M6.1 - Stabilität**
+- Error Handling für alle Edge Cases
+- Crash-freie Nutzung bei fehlerhaften Git-Repos
+- Memory Leak Check (Instruments)
+- Performance-Optimierung für viele Repos (>20)
+
+**M6.2 - UX Polish**
+- Animations und Transitions
+- Empty States (keine Commits heute, etc.)
+- Onboarding bei erstem Start
+- Hilfreiche Tooltips
+
+**M6.3 - Distribution**
+- Code Signing mit Developer ID
+- Notarization für Gatekeeper
+- DMG-Installer erstellen
+- Sparkle für Auto-Updates integrieren
+- Download-Website / GitHub Releases
+
+**M6.4 - Dokumentation**
+- README mit Screenshots
+- FAQ / Troubleshooting
+- Changelog
+
+**Deliverable:** Beta-Release bereit für externe Tester
+
+---
+
+### Post-MVP Roadmap
+
+**Version 1.1 - File System Monitoring**
+- FSEvents Integration
+- Tracking welche Dateien bearbeitet wurden
+- Erweiterte Session-Detection
+
+**Version 1.2 - Export & Reporting**
+- Markdown Export für Stand-ups
+- Wochen-/Monats-Reports
+- Copy-to-Clipboard für schnelles Teilen
+
+**Version 2.0 - AI Summaries**
+- Integration lokaler LLM (llama.cpp / MLX)
+- Automatische Zusammenfassung des Arbeitstages
+- "Was habe ich diese Woche gemacht?" Feature
+
+**Version 2.1 - Advanced Analytics**
+- Produktivitäts-Heatmaps
+- Code Velocity Trends
+- Focus Time Tracking
 
 ---
 
@@ -319,11 +482,12 @@ Tabs:
 
 | Risiko | Impact | Wahrscheinlichkeit | Mitigation |
 |--------|---------|-------------------|------------|
-| Zu hoher Battery Drain | Hoch | Mittel | FSEvents nutzen statt Polling, Throttling |
-| Privacy Bedenken der User | Hoch | Mittel | Transparente Kommunikation, Local-First |
-| Git-Repos zu groß/langsam | Mittel | Hoch | Caching, nur HEAD-Commits, Background Processing |
-| Konkurrenz (WakaTime, etc.) | Mittel | Hoch | Fokus auf Git-Integration + AI Summaries |
-| Sandboxing-Limitations | Hoch | Mittel | Entscheidung: Kein App Store oder Restricted Features |
+| Git-Shell-Commands langsam | Mittel | Mittel | Background-Thread, Caching, nur neue Commits laden |
+| Privacy Bedenken der User | Hoch | Mittel | Transparente Kommunikation, Local-First, klare Settings |
+| Git-Repos zu groß/langsam | Mittel | Hoch | Limit auf letzte 100 Commits, nur HEAD-Branch |
+| Konkurrenz (WakaTime, etc.) | Mittel | Hoch | Differenzierung: Privacy-First, keine Cloud, AI lokal |
+| Notarization-Probleme | Mittel | Niedrig | Frühzeitig testen, Apple Developer Account bereit |
+| Polling verpasst Commits | Niedrig | Niedrig | 60s Intervall ist ausreichend, User kann manuell refreshen |
 
 ---
 
@@ -347,15 +511,47 @@ Tabs:
 
 ---
 
-## Nächste Schritte
+## 13. Implementierungs-Checkliste
 
-1. ✅ PRD erstellen
-2. ⏳ Feedback einholen & iterieren
-3. ⏳ Technische Machbarkeitsstudie (FSEvents + libgit2)
-4. ⏳ UI Mockups erstellen
-5. ⏳ Prototype: Minimale Version mit Repo-Discovery + Simple Timeline
-6. ⏳ Architecture finalisieren
-7. ⏳ Development starten
+### Milestone 1: Foundation
+- [ ] SwiftUI Menubar App Grundstruktur
+- [ ] SQLite.swift Datenbank Setup
+- [ ] Schema Migration System
+- [ ] Lokalisierung Infrastructure (String Catalogs)
+- [ ] Models: Project, Session, Commit
+
+### Milestone 2: Git Integration
+- [ ] GitService mit Shell Command Wrapper
+- [ ] Git Log Parsing
+- [ ] Repository Discovery (Standard-Pfade)
+- [ ] Manuelles Repo hinzufügen
+- [ ] Commit Polling (Timer-basiert)
+
+### Milestone 3: Session Management
+- [ ] Session-Logik (Start/Ende/Timeout)
+- [ ] ActivityTracker Komponente
+- [ ] Statistik-Berechnung
+
+### Milestone 4: Menubar UI
+- [ ] NSStatusItem + Popover
+- [ ] Quick View mit Tages-Summary
+- [ ] Deutsche Übersetzungen
+- [ ] Keyboard Shortcut
+
+### Milestone 5: Main Dashboard
+- [ ] Dashboard Window
+- [ ] Today View mit Timeline
+- [ ] History View mit Kalender
+- [ ] Projects View
+- [ ] Settings View
+
+### Milestone 6: Polish & Beta
+- [ ] Error Handling komplett
+- [ ] Performance-Optimierung
+- [ ] Code Signing + Notarization
+- [ ] DMG Installer
+- [ ] Sparkle Auto-Updates
+- [ ] README + Dokumentation
 
 ---
 
