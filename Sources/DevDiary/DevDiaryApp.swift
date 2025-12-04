@@ -2,10 +2,12 @@ import SwiftUI
 
 @main
 struct DevDiaryApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
     var body: some Scene {
-        WindowGroup {
-            Text("DevDiary - Initial Setup")
-                .frame(minWidth: 400, minHeight: 300)
+        // Empty settings scene - we're a menubar-only app
+        Settings {
+            EmptyView()
         }
     }
 }

@@ -1,0 +1,450 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "menubar.todaySummary" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Heute" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Today's Summary" } }
+      }
+    },
+    "menubar.stat.time" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Arbeitszeit" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Work Time" } }
+      }
+    },
+    "menubar.stat.commits" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Commits" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Commits" } }
+      }
+    },
+    "menubar.lastCommit" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Letzter Commit" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last Commit" } }
+      }
+    },
+    "menubar.noCommits" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Heute noch keine Commits" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No commits today" } }
+      }
+    },
+    "menubar.button.dashboard" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dashboard" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Dashboard" } }
+      }
+    },
+    "menubar.button.settings" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Einstellungen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } }
+      }
+    },
+    "menubar.button.quit" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Beenden" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Quit" } }
+      }
+    },
+    "menubar.button.refresh" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisieren" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Refresh" } }
+      }
+    },
+    "menubar.tooltip.commits" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%d Commits heute" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%d commits today" } }
+      }
+    },
+    "menubar.tooltip.noCommits" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "DevDiary - Keine Commits heute" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "DevDiary - No commits today" } }
+      }
+    },
+    "menubar.loading" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lade Daten..." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Loading..." } }
+      }
+    },
+    "menubar.activeSession" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktive Session" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Active Session" } }
+      }
+    },
+    "database.error.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Datenbankfehler" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Database Error" } }
+      }
+    },
+    "database.error.message" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Die Datenbank konnte nicht initialisiert werden: %@" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Could not initialize database: %@" } }
+      }
+    },
+    "button.quit" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Beenden" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Quit" } }
+      }
+    },
+    "button.cancel" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Abbrechen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } }
+      }
+    },
+    "dashboard.tab.today" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Heute" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Today" } }
+      }
+    },
+    "dashboard.tab.history" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verlauf" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "History" } }
+      }
+    },
+    "dashboard.tab.projects" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekte" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Projects" } }
+      }
+    },
+    "dashboard.tab.settings" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Einstellungen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } }
+      }
+    },
+    "today.statistics.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Statistiken" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Statistics" } }
+      }
+    },
+    "today.stat.workTime" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Arbeitszeit" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Work Time" } }
+      }
+    },
+    "today.stat.commits" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Commits" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Commits" } }
+      }
+    },
+    "today.stat.additions" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hinzugefügt" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Additions" } }
+      }
+    },
+    "today.stat.deletions" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gelöscht" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deletions" } }
+      }
+    },
+    "today.sessions.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sessions" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sessions" } }
+      }
+    },
+    "today.sessions.empty" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine Sessions heute" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No sessions today" } }
+      }
+    },
+    "today.commits.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Commits" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Commits" } }
+      }
+    },
+    "today.commits.empty" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine Commits heute" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No commits today" } }
+      }
+    },
+    "today.empty" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch keine Aktivität heute" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No activity today yet" } }
+      }
+    },
+    "history.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verlauf" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "History" } }
+      }
+    },
+    "history.today" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Heute" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Today" } }
+      }
+    },
+    "history.noActivity" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine Aktivität" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No activity" } }
+      }
+    },
+    "projects.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekte" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Projects" } }
+      }
+    },
+    "projects.add" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekt hinzufügen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Project" } }
+      }
+    },
+    "projects.refresh" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisieren" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Refresh" } }
+      }
+    },
+    "projects.empty" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine Projekte gefunden" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No projects found" } }
+      }
+    },
+    "projects.discover" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Repositories suchen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Discover Repositories" } }
+      }
+    },
+    "projects.selectProject" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wähle ein Projekt aus" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Select a project" } }
+      }
+    },
+    "projects.openInFinder" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Im Finder öffnen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open in Finder" } }
+      }
+    },
+    "projects.tracking.on" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tracking aktiv" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tracking enabled" } }
+      }
+    },
+    "projects.tracking.off" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tracking pausiert" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tracking disabled" } }
+      }
+    },
+    "projects.stat.totalTime" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gesamtzeit" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Total Time" } }
+      }
+    },
+    "projects.stat.commits" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Commits" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Commits" } }
+      }
+    },
+    "projects.stat.sessions" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sessions" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sessions" } }
+      }
+    },
+    "projects.stat.additions" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hinzugefügt" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Additions" } }
+      }
+    },
+    "projects.stat.deletions" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gelöscht" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deletions" } }
+      }
+    },
+    "projects.stat.lastActivity" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Letzte Aktivität" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last Activity" } }
+      }
+    },
+    "projects.noStats" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine Statistiken verfügbar" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No statistics available" } }
+      }
+    },
+    "projects.add.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Repository hinzufügen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Repository" } }
+      }
+    },
+    "projects.add.description" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wähle einen Ordner mit einem Git-Repository aus" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Select a folder containing a Git repository" } }
+      }
+    },
+    "projects.add.path" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Pfad" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Path" } }
+      }
+    },
+    "projects.add.browse" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Durchsuchen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Browse" } }
+      }
+    },
+    "projects.add.confirm" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hinzufügen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add" } }
+      }
+    },
+    "projects.add.selectFolder" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Git-Repository auswählen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Select Git Repository" } }
+      }
+    },
+    "settings.general.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Allgemein" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "General" } }
+      }
+    },
+    "settings.general.launchAtLogin" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bei Anmeldung starten" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Launch at Login" } }
+      }
+    },
+    "settings.general.launchAtLogin.description" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "DevDiary automatisch beim Systemstart öffnen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Automatically open DevDiary when you log in" } }
+      }
+    },
+    "settings.tracking.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tracking" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tracking" } }
+      }
+    },
+    "settings.tracking.pollingInterval" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Abfrage-Intervall" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Polling Interval" } }
+      }
+    },
+    "settings.tracking.pollingInterval.description" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wie oft nach neuen Commits gesucht wird" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "How often to check for new commits" } }
+      }
+    },
+    "settings.tracking.sessionTimeout" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Session-Timeout" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Session Timeout" } }
+      }
+    },
+    "settings.tracking.sessionTimeout.description" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Session endet nach dieser Inaktivitätszeit" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Session ends after this period of inactivity" } }
+      }
+    },
+    "settings.privacy.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Datenschutz" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Privacy" } }
+      }
+    },
+    "settings.privacy.dataRetention" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Daten aufbewahren für" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Keep data for" } }
+      }
+    },
+    "settings.privacy.dataRetention.description" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ältere Daten werden automatisch gelöscht" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Older data will be automatically deleted" } }
+      }
+    },
+    "settings.privacy.days" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tage" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "days" } }
+      }
+    },
+    "settings.privacy.localOnly" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nur lokale Daten" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Local Data Only" } }
+      }
+    },
+    "settings.privacy.localOnly.description" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle Daten bleiben auf deinem Mac. Keine Cloud, keine Telemetrie." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All data stays on your Mac. No cloud, no telemetry." } }
+      }
+    },
+    "settings.about.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Über" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About" } }
+      }
+    },
+    "settings.about.description" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "DevDiary trackt automatisch deine tägliche Entwicklungsarbeit und erstellt lesbare Zusammenfassungen." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "DevDiary automatically tracks your daily development work and creates readable summaries." } }
+      }
+    },
+    "settings.about.github" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "GitHub" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "GitHub" } }
+      }
+    },
+    "settings.about.license" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lizenz" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "License" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -21,6 +21,9 @@ let package = Package(
             name: "DevDiary",
             dependencies: [
                 .product(name: "SQLite", package: "SQLite.swift")
+            ],
+            resources: [
+                .process("Resources")
             ]
         ),
     ]

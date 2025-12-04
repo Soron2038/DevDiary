@@ -1,7 +1,7 @@
 import Foundation
 
 /// Represents a tracked Git repository
-struct Project: Identifiable, Equatable, Codable {
+struct Project: Identifiable, Equatable, Codable, Hashable {
     let id: UUID
     var name: String
     var path: String
