@@ -14,6 +14,9 @@ final class DashboardWindow: NSObject {
     
     /// Show the dashboard window
     func show() {
+        // For menubar apps, we need to set activation policy temporarily
+        NSApp.setActivationPolicy(.regular)
+        
         if let window = window {
             // Window exists, bring to front
             window.makeKeyAndOrderFront(nil)
@@ -68,6 +71,8 @@ extension DashboardWindow: NSWindowDelegate {
         if let frame = window?.frameDescriptor {
             UserDefaults.standard.set(frame, forKey: windowFrameKey)
         }
+        // Return to accessory mode when window closes
+        NSApp.setActivationPolicy(.accessory)
     }
     
     func windowDidBecomeKey(_ notification: Notification) {

@@ -215,21 +215,21 @@ struct MenuBarView: View {
     private var footerButtons: some View {
         HStack {
             Button(action: openDashboard) {
-                Label("menubar.button.dashboard", systemImage: "rectangle.3.group")
+                Label("Dashboard", systemImage: "rectangle.3.group")
             }
             .buttonStyle(.plain)
             
             Spacer()
             
             Button(action: openSettings) {
-                Label("menubar.button.settings", systemImage: "gear")
+                Label("Settings", systemImage: "gear")
             }
             .buttonStyle(.plain)
             
             Spacer()
             
             Button(action: quitApp) {
-                Label("menubar.button.quit", systemImage: "power")
+                Label("Quit", systemImage: "power")
             }
             .buttonStyle(.plain)
         }
