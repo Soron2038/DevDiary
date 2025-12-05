@@ -27,3 +27,8 @@ fastlane/test_output
 
 # Local only
 NotSynced/
+
+# Distribution artifacts
+Distribution/*.app
+Distribution/*.dmg
+Distribution/*.iconset
