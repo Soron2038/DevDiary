@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "DevDiary",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v13)
     ],

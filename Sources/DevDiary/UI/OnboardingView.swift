@@ -68,7 +68,7 @@ struct OnboardingView: View {
             }
             .padding()
         }
-        .frame(width: 500, height: 420)
+        .frame(width: 520, height: 480)
     }
     
     // MARK: - Pages

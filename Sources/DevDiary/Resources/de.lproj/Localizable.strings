@@ -1,0 +1,114 @@
+/* Menubar */
+"menubar.todaySummary" = "Heute";
+"menubar.stat.time" = "Arbeitszeit";
+"menubar.stat.commits" = "Commits";
+"menubar.lastCommit" = "Letzter Commit";
+"menubar.noCommits" = "Heute noch keine Commits";
+"menubar.button.dashboard" = "Dashboard";
+"menubar.button.settings" = "Einstellungen";
+"menubar.button.quit" = "Beenden";
+"menubar.button.refresh" = "Aktualisieren";
+"menubar.tooltip.commits" = "%d Commits heute";
+"menubar.tooltip.noCommits" = "DevDiary - Keine Commits heute";
+"menubar.loading" = "Lade Daten...";
+"menubar.activeSession" = "Aktive Session";
+
+/* Database */
+"database.error.title" = "Datenbankfehler";
+"database.error.message" = "Die Datenbank konnte nicht initialisiert werden: %@";
+
+/* Buttons */
+"button.quit" = "Beenden";
+"button.cancel" = "Abbrechen";
+
+/* Dashboard Tabs */
+"dashboard.tab.today" = "Heute";
+"dashboard.tab.history" = "Verlauf";
+"dashboard.tab.projects" = "Projekte";
+"dashboard.tab.settings" = "Einstellungen";
+
+/* Today View */
+"today.statistics.title" = "Statistiken";
+"today.stat.workTime" = "Arbeitszeit";
+"today.stat.commits" = "Commits";
+"today.stat.additions" = "Hinzugefügt";
+"today.stat.deletions" = "Gelöscht";
+"today.sessions.title" = "Sessions";
+"today.sessions.empty" = "Keine Sessions heute";
+"today.commits.title" = "Commits";
+"today.commits.empty" = "Keine Commits heute";
+"today.empty" = "Noch keine Aktivität heute";
+"today.empty.hint" = "Starte mit dem Coden und deine Aktivität wird hier erscheinen";
+
+/* Session */
+"session.unknownProject" = "Unbekanntes Projekt";
+"session.now" = "jetzt";
+
+/* History View */
+"history.title" = "Verlauf";
+"history.today" = "Heute";
+"history.noActivity" = "Keine Aktivität";
+
+/* Projects View */
+"projects.title" = "Projekte";
+"projects.add" = "Projekt hinzufügen";
+"projects.refresh" = "Aktualisieren";
+"projects.empty" = "Keine Projekte gefunden";
+"projects.discover" = "Repositories suchen";
+"projects.selectProject" = "Wähle ein Projekt aus";
+"projects.openInFinder" = "Im Finder öffnen";
+"projects.tracking.on" = "Tracking aktiv";
+"projects.tracking.off" = "Tracking pausiert";
+"projects.stat.totalTime" = "Gesamtzeit";
+"projects.stat.commits" = "Commits";
+"projects.stat.sessions" = "Sessions";
+"projects.stat.additions" = "Hinzugefügt";
+"projects.stat.deletions" = "Gelöscht";
+"projects.stat.lastActivity" = "Letzte Aktivität";
+"projects.noStats" = "Keine Statistiken verfügbar";
+"projects.add.title" = "Repository hinzufügen";
+"projects.add.description" = "Wähle einen Ordner mit einem Git-Repository aus";
+"projects.add.path" = "Pfad";
+"projects.add.browse" = "Durchsuchen";
+"projects.add.confirm" = "Hinzufügen";
+"projects.add.selectFolder" = "Git-Repository auswählen";
+
+/* Settings View */
+"settings.general.title" = "Allgemein";
+"settings.general.launchAtLogin" = "Bei Anmeldung starten";
+"settings.general.launchAtLogin.description" = "DevDiary automatisch beim Systemstart öffnen";
+"settings.tracking.title" = "Tracking";
+"settings.tracking.pollingInterval" = "Abfrage-Intervall";
+"settings.tracking.pollingInterval.description" = "Wie oft nach neuen Commits gesucht wird";
+"settings.tracking.sessionTimeout" = "Session-Timeout";
+"settings.tracking.sessionTimeout.description" = "Session endet nach dieser Inaktivitätszeit";
+"settings.privacy.title" = "Datenschutz";
+"settings.privacy.dataRetention" = "Daten aufbewahren für";
+"settings.privacy.dataRetention.description" = "Ältere Daten werden automatisch gelöscht";
+"settings.privacy.days" = "Tage";
+"settings.privacy.localOnly" = "Nur lokale Daten";
+"settings.privacy.localOnly.description" = "Alle Daten bleiben auf deinem Mac. Keine Cloud, keine Telemetrie.";
+"settings.about.title" = "Über";
+"settings.about.description" = "DevDiary trackt automatisch deine tägliche Entwicklungsarbeit und erstellt lesbare Zusammenfassungen.";
+"settings.about.github" = "GitHub";
+"settings.about.license" = "Lizenz";
+
+/* Onboarding */
+"onboarding.button.back" = "Zurück";
+"onboarding.button.next" = "Weiter";
+"onboarding.button.start" = "Los geht's";
+"onboarding.welcome.title" = "Willkommen bei DevDiary";
+"onboarding.welcome.subtitle" = "Dein automatisches Tagebuch für die tägliche Entwicklungsarbeit";
+"onboarding.feature.tracking" = "Automatisches\nZeit-Tracking";
+"onboarding.feature.git" = "Git-basierte\nAktivität";
+"onboarding.feature.privacy" = "100% Lokal\n& Privat";
+"onboarding.privacy.title" = "Deine Daten gehören dir";
+"onboarding.privacy.local" = "Alle Daten bleiben auf deinem Mac";
+"onboarding.privacy.noNetwork" = "Keine Netzwerkverbindung erforderlich";
+"onboarding.privacy.control" = "Du kontrollierst was getrackt wird";
+"onboarding.privacy.delete" = "Daten jederzeit löschbar";
+"onboarding.setup.title" = "Repositories finden";
+"onboarding.setup.description" = "DevDiary sucht automatisch nach Git-Repositories in deinen üblichen Entwicklungsordnern.";
+"onboarding.setup.paths" = "Durchsuchte Ordner:";
+"onboarding.setup.discovering" = "Suche Repositories...";
+"onboarding.setup.found" = "%d Repositories gefunden";

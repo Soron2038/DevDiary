@@ -70,7 +70,13 @@ fi
 # Copy resources (localization files, assets)
 echo "📋 Copying resources..."
 if [ -d "$PROJECT_DIR/Sources/DevDiary/Resources" ]; then
-    cp -R "$PROJECT_DIR/Sources/DevDiary/Resources/"* "$APP_BUNDLE/Contents/Resources/" 2>/dev/null || true
+    # Copy .lproj directories for localization
+    for lproj in "$PROJECT_DIR/Sources/DevDiary/Resources/"*.lproj; do
+        if [ -d "$lproj" ]; then
+            cp -R "$lproj" "$APP_BUNDLE/Contents/Resources/"
+            echo "   ✓ Copied $(basename "$lproj")"
+        fi
+    done
 fi
 
 # Create PkgInfo
