@@ -444,6 +444,132 @@
         "de" : { "stringUnit" : { "state" : "translated", "value" : "Lizenz" } },
         "en" : { "stringUnit" : { "state" : "translated", "value" : "License" } }
       }
+    },
+    "onboarding.button.back" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zurück" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Back" } }
+      }
+    },
+    "onboarding.button.next" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Weiter" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Next" } }
+      }
+    },
+    "onboarding.button.start" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Los geht's" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Get Started" } }
+      }
+    },
+    "onboarding.welcome.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Willkommen bei DevDiary" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Welcome to DevDiary" } }
+      }
+    },
+    "onboarding.welcome.subtitle" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dein automatisches Tagebuch für die tägliche Entwicklungsarbeit" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your automatic diary for daily development work" } }
+      }
+    },
+    "onboarding.feature.tracking" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Automatisches\nZeit-Tracking" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Automatic\nTime Tracking" } }
+      }
+    },
+    "onboarding.feature.git" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Git-basierte\nAktivität" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Git-based\nActivity" } }
+      }
+    },
+    "onboarding.feature.privacy" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "100% Lokal\n& Privat" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "100% Local\n& Private" } }
+      }
+    },
+    "onboarding.privacy.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Deine Daten gehören dir" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your Data Stays Yours" } }
+      }
+    },
+    "onboarding.privacy.local" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle Daten bleiben auf deinem Mac" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All data stays on your Mac" } }
+      }
+    },
+    "onboarding.privacy.noNetwork" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine Netzwerkverbindung erforderlich" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No network connection required" } }
+      }
+    },
+    "onboarding.privacy.control" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Du kontrollierst was getrackt wird" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "You control what gets tracked" } }
+      }
+    },
+    "onboarding.privacy.delete" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Daten jederzeit löschbar" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete your data anytime" } }
+      }
+    },
+    "onboarding.setup.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Repositories finden" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Find Repositories" } }
+      }
+    },
+    "onboarding.setup.description" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "DevDiary sucht automatisch nach Git-Repositories in deinen üblichen Entwicklungsordnern." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "DevDiary will automatically search for Git repositories in your common development folders." } }
+      }
+    },
+    "onboarding.setup.paths" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Durchsuchte Ordner:" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Folders to search:" } }
+      }
+    },
+    "onboarding.setup.discovering" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Suche Repositories..." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Discovering repositories..." } }
+      }
+    },
+    "onboarding.setup.found" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%d Repositories gefunden" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%d repositories found" } }
+      }
+    },
+    "today.empty.hint" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Starte mit dem Coden und deine Aktivität wird hier erscheinen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Start coding and your activity will appear here" } }
+      }
+    },
+    "session.unknownProject" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Unbekanntes Projekt" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unknown Project" } }
+      }
+    },
+    "session.now" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "jetzt" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "now" } }
+      }
     }
   },
   "version" : "1.0"

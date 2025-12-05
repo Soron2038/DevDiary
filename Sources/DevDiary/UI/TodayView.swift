@@ -166,16 +166,24 @@ struct TodayView: View {
     // MARK: - Empty State
     
     private var emptyState: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 16) {
             Image(systemName: "cup.and.saucer")
-                .font(.largeTitle)
+                .font(.system(size: 48))
                 .foregroundColor(.secondary)
-            Text("today.empty")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            
+            VStack(spacing: 4) {
+                Text("today.empty")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                
+                Text("today.empty.hint")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary.opacity(0.7))
+                    .multilineTextAlignment(.center)
+            }
         }
         .frame(maxWidth: .infinity)
-        .padding()
+        .padding(40)
     }
     
     // MARK: - Data Loading
@@ -207,6 +215,8 @@ private struct StatCard: View {
     let icon: String
     let color: Color
     
+    @State private var isHovered = false
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
@@ -224,6 +234,12 @@ private struct StatCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(nsColor: .controlBackgroundColor))
         .cornerRadius(8)
+        .scaleEffect(isHovered ? 1.02 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isHovered)
+        .onHover { hovering in
+            isHovered = hovering
+        }
+        .help(title)
     }
 }
 
@@ -231,15 +247,30 @@ private struct SessionRow: View {
     let session: Session
     let project: Project?
     
+    @State private var isHovered = false
+    
     var body: some View {
         HStack {
-            // Active indicator
+            // Active indicator with pulse animation
             Circle()
                 .fill(session.isActive ? Color.green : Color.gray.opacity(0.3))
                 .frame(width: 8, height: 8)
+                .overlay {
+                    if session.isActive {
+                        Circle()
+                            .stroke(Color.green.opacity(0.5), lineWidth: 2)
+                            .scaleEffect(1.5)
+                            .opacity(0)
+                            .animation(
+                                .easeOut(duration: 1.0)
+                                .repeatForever(autoreverses: false),
+                                value: session.isActive
+                            )
+                    }
+                }
             
             VStack(alignment: .leading, spacing: 2) {
-                Text(project?.name ?? "Unknown")
+                Text(project?.name ?? String(localized: "session.unknownProject"))
                     .font(.subheadline)
                     .fontWeight(.medium)
                 
@@ -249,7 +280,7 @@ private struct SessionRow: View {
                         Text("-")
                         Text(endTime, style: .time)
                     } else {
-                        Text("- now")
+                        Text("- " + String(localized: "session.now"))
                             .foregroundColor(.green)
                     }
                 }
@@ -263,8 +294,17 @@ private struct SessionRow: View {
                 .font(.caption)
                 .fontWeight(.medium)
                 .foregroundColor(.secondary)
+                .monospacedDigit()
         }
         .padding(.vertical, 4)
+        .padding(.horizontal, 4)
+        .background(isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
+        .cornerRadius(6)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
     }
 }
 
