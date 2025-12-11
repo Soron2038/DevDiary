@@ -8,19 +8,45 @@ final class GitHubService {
     static let shared = GitHubService()
     private let logger = Logger(subsystem: "com.devdiary", category: "GitHub")
 
+    enum GitEnvironment: String, CaseIterable {
+        case dev, prod
+    }
+
     // Keychain constants
     private let keychainService = "DevDiary.GitHub"
     private let tokenAccount = "access_token"
 
+    private let envDefaultsKey = "GitEnvironment"
+
+    var selectedEnvironment: GitEnvironment {
+        if let raw = UserDefaults.standard.string(forKey: envDefaultsKey), let env = GitEnvironment(rawValue: raw) {
+            return env
+        }
+        #if DEBUG
+        return .dev
+        #else
+        return .prod
+        #endif
+    }
+
+    func setEnvironment(_ env: GitEnvironment) {
+        UserDefaults.standard.set(env.rawValue, forKey: envDefaultsKey)
+    }
+
     // OAuth constants
-    // Client ID can be configured by the user in Settings or via environment variable.
-    // Environment variables (fallback): DEV_DIARY_GITHUB_CLIENT_ID or GITHUB_CLIENT_ID
+    // Client ID can be configured by the user in Settings or via environment variables.
+    // Environment variables checked (in order):
+    //   DEV_DIARY_GITHUB_CLIENT_ID_DEV / _PROD, then DEV_DIARY_GITHUB_CLIENT_ID, then GITHUB_CLIENT_ID
     var clientId: String? {
-        if let configured = UserDefaults.standard.string(forKey: "GitHubClientID"), !configured.isEmpty {
+        let env = selectedEnvironment
+        // 1) User-configured per-environment Client ID
+        if let configured = UserDefaults.standard.string(forKey: "GitHubClientID.\(env.rawValue)"), !configured.isEmpty {
             return configured
         }
-        let env = ProcessInfo.processInfo.environment
-        return env["DEV_DIARY_GITHUB_CLIENT_ID"] ?? env["GITHUB_CLIENT_ID"]
+        // 2) Environment variables
+        let procEnv = ProcessInfo.processInfo.environment
+        let perEnvKey = env == .dev ? "DEV_DIARY_GITHUB_CLIENT_ID_DEV" : "DEV_DIARY_GITHUB_CLIENT_ID_PROD"
+        return procEnv[perEnvKey] ?? procEnv["DEV_DIARY_GITHUB_CLIENT_ID"] ?? procEnv["GITHUB_CLIENT_ID"]
     }
 
     private init() {}
@@ -29,7 +55,8 @@ final class GitHubService {
 
     func saveClientId(_ value: String?) {
         let trimmed = (value ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        UserDefaults.standard.set(trimmed, forKey: "GitHubClientID")
+        let key = "GitHubClientID.\(selectedEnvironment.rawValue)"
+        UserDefaults.standard.set(trimmed, forKey: key)
     }
 
     struct DeviceCode: Decodable {

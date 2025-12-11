@@ -102,6 +102,10 @@
 
 /* Settings → Accounts */
 "settings.accounts.title" = "Konten";
+"settings.accounts.environment.title" = "Umgebung";
+"settings.accounts.environment.dev" = "Entwicklung";
+"settings.accounts.environment.prod" = "Produktion";
+"settings.accounts.environment.note" = "Auswahl steuert, welche Client ID genutzt wird (getrennte Werte pro Umgebung).";
 "settings.accounts.notConnected" = "Nicht verbunden";
 "settings.accounts.connected" = "Verbunden";
 "settings.accounts.connectedAs" = "Verbunden als %@";

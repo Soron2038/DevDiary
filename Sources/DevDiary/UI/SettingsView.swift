@@ -22,9 +22,12 @@ struct SettingsView: View {
     @State private var authErrorMessage: String?
     @State private var pollingTask: Task<Void, Never>?
 
+    // Accounts environment
+    @State private var environment = GitHubService.shared.selectedEnvironment
+
     // Setup sheet
     @State private var showingGitHubSetup = false
-    @State private var clientIdInput: String = UserDefaults.standard.string(forKey: "GitHubClientID") ?? ""
+    @State private var clientIdInput: String = (UserDefaults.standard.string(forKey: "GitHubClientID.dev") ?? "")
     
     var body: some View {
         ScrollView {
@@ -142,6 +145,19 @@ struct SettingsView: View {
                 
                 // Accounts section
                 SettingsSection(title: String(localized: "settings.accounts.title")) {
+                    // Environment picker
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(String(localized: "settings.accounts.environment.title")).font(.subheadline)
+                        Picker("", selection: $environment) {
+                            Text(String(localized: "settings.accounts.environment.dev")).tag(GitHubService.GitEnvironment.dev)
+                            Text(String(localized: "settings.accounts.environment.prod")).tag(GitHubService.GitEnvironment.prod)
+                        }
+                        .pickerStyle(.segmented)
+                        Text(String(localized: "settings.accounts.environment.note"))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
                     HStack(spacing: 12) {
                         Image(systemName: "chevron.left.forwardslash.chevron.right")
                             .font(.title2)
@@ -171,6 +187,7 @@ struct SettingsView: View {
                                     Task { await startGitHubDeviceFlow() }
                                 }
                                 Button(String(localized: "settings.accounts.configure")) {
+                                    clientIdInput = UserDefaults.standard.string(forKey: "GitHubClientID.\(environment.rawValue)") ?? ""
                                     showingGitHubSetup = true
                                 }
                                 .help(String(localized: "settings.accounts.configure.help"))
@@ -178,8 +195,12 @@ struct SettingsView: View {
                         }
                     }
                 }
-.sheet(isPresented: $showingGitHubSetup) {
+.onChange(of: environment) { env in
+                    GitHubService.shared.setEnvironment(env)
+                }
+                .sheet(isPresented: $showingGitHubSetup) {
                     GitHubSetupSheet(clientIdInput: $clientIdInput, onSave: {
+                        GitHubService.shared.setEnvironment(environment)
                         GitHubService.shared.saveClientId(clientIdInput)
                         showingGitHubSetup = false
                     }, onOpenGitHub: {
