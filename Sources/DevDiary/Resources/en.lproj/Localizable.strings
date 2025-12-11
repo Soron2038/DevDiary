@@ -73,6 +73,13 @@
 "projects.add.confirm" = "Add";
 "projects.add.selectFolder" = "Select Git Repository";
 
+/* Projects → Remove */
+"projects.remove" = "Remove";
+"projects.remove.tooltip" = "Remove project from DevDiary";
+"projects.remove.confirm.title" = "Remove project?";
+"projects.remove.confirm.message" = "The project and its history (sessions and commits) will be deleted from DevDiary. Local files remain untouched.";
+"projects.remove.confirm.delete" = "Remove";
+
 /* Settings View */
 "settings.general.title" = "General";
 "settings.general.launchAtLogin" = "Launch at Login";
@@ -92,6 +99,19 @@
 "settings.about.description" = "DevDiary automatically tracks your daily development work and creates readable summaries.";
 "settings.about.github" = "GitHub";
 "settings.about.license" = "License";
+
+/* Settings → Accounts */
+"settings.accounts.title" = "Accounts";
+"settings.accounts.notConnected" = "Not connected";
+"settings.accounts.connected" = "Connected";
+"settings.accounts.connectedAs" = "Connected as %@";
+"settings.accounts.connect" = "Connect to GitHub";
+"settings.accounts.disconnect" = "Disconnect";
+
+/* GitHub Device Auth */
+"github.auth.title" = "Connect GitHub";
+"github.auth.instructions" = "Open GitHub in your browser and enter this code to authorize DevDiary.";
+"github.auth.openInBrowser" = "Open in Browser";
 
 /* Onboarding */
 "onboarding.button.back" = "Back";
