@@ -14,7 +14,7 @@ final class GitHubService {
 
     // Keychain constants
     private let keychainService = "DevDiary.GitHub"
-    private let tokenAccount = "access_token"
+    private let legacyTokenAccount = "access_token"
 
     private let envDefaultsKey = "GitEnvironment"
 
@@ -98,16 +98,45 @@ final class GitHubService {
     }
 
     var isConnected: Bool {
-        (try? KeychainService.shared.getPassword(service: keychainService, account: tokenAccount)) != nil
+        hasToken(for: selectedEnvironment)
+    }
+
+    private func tokenAccount(for env: GitEnvironment) -> String {
+        "access_token.\(env.rawValue)"
+    }
+
+    func hasToken(for env: GitEnvironment) -> Bool {
+        // Check per-env token first, fallback to legacy
+        if let _ = try? KeychainService.shared.getPassword(service: keychainService, account: tokenAccount(for: env)) {
+            return true
+        }
+        if let _ = try? KeychainService.shared.getPassword(service: keychainService, account: legacyTokenAccount) {
+            return true
+        }
+        return false
     }
 
     func disconnect() throws {
-        try KeychainService.shared.deletePassword(service: keychainService, account: tokenAccount)
+        // Delete token for current environment and legacy
+        try? KeychainService.shared.deletePassword(service: keychainService, account: tokenAccount(for: selectedEnvironment))
+        try? KeychainService.shared.deletePassword(service: keychainService, account: legacyTokenAccount)
+    }
+
+    func disconnectAll() {
+        // Remove tokens for both envs and legacy
+        try? KeychainService.shared.deletePassword(service: keychainService, account: tokenAccount(for: .dev))
+        try? KeychainService.shared.deletePassword(service: keychainService, account: tokenAccount(for: .prod))
+        try? KeychainService.shared.deletePassword(service: keychainService, account: legacyTokenAccount)
     }
 
     func currentAccessToken() -> String? {
         do {
-            if let data = try KeychainService.shared.getPassword(service: keychainService, account: tokenAccount) {
+            // Prefer current environment token
+            if let data = try KeychainService.shared.getPassword(service: keychainService, account: tokenAccount(for: selectedEnvironment)) {
+                return String(data: data, encoding: .utf8)
+            }
+            // Fallback to legacy account
+            if let data = try KeychainService.shared.getPassword(service: keychainService, account: legacyTokenAccount) {
                 return String(data: data, encoding: .utf8)
             }
         } catch {
@@ -160,8 +189,9 @@ final class GitHubService {
             if http.statusCode == 200 {
                 // Success
                 let token = try JSONDecoder().decode(AccessTokenResponse.self, from: data)
-                try KeychainService.shared.setPassword(Data(token.access_token.utf8), service: keychainService, account: tokenAccount)
-                logger.info("GitHub token stored in Keychain")
+                let account = tokenAccount(for: selectedEnvironment)
+                try KeychainService.shared.setPassword(Data(token.access_token.utf8), service: keychainService, account: account)
+                logger.info("GitHub token stored in Keychain for env \(self.selectedEnvironment.rawValue)")
                 return
             } else {
                 // Error payload is JSON: {"error":"authorization_pending"|"slow_down"|"expired_token"|"access_denied"}

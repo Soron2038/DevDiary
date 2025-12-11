@@ -111,6 +111,14 @@
 "settings.accounts.connectedAs" = "Verbunden als %@";
 "settings.accounts.connect" = "Mit GitHub verbinden";
 "settings.accounts.disconnect" = "Verbindung trennen";
+"settings.accounts.deleteToken" = "Token löschen";
+"settings.accounts.deleteToken.confirm.title" = "Token für gewählte Umgebung löschen?";
+"settings.accounts.deleteToken.confirm.message" = "Der gespeicherte GitHub-Token für die aktuelle Umgebung wird aus dem Schlüsselbund gelöscht.";
+"settings.accounts.deleteToken.confirm.delete" = "Löschen";
+"settings.accounts.deleteAllTokens" = "Alle Tokens löschen";
+"settings.accounts.deleteAllTokens.confirm.title" = "Alle GitHub-Tokens löschen?";
+"settings.accounts.deleteAllTokens.confirm.message" = "Löscht alle gespeicherten GitHub-Tokens (Entwicklung, Produktion und ggf. alte Einträge).";
+"settings.accounts.deleteAllTokens.confirm.delete" = "Alle löschen";
 "settings.accounts.configure" = "Konfigurieren";
 "settings.accounts.configure.help" = "GitHub Client ID hinterlegen"
 ;

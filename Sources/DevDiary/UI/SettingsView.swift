@@ -22,6 +22,10 @@ struct SettingsView: View {
     @State private var authErrorMessage: String?
     @State private var pollingTask: Task<Void, Never>?
 
+    // Token deletion confirmations
+    @State private var showingDeleteTokenAlert = false
+    @State private var showingDeleteAllTokensAlert = false
+
     // Accounts environment
     @State private var environment = GitHubService.shared.selectedEnvironment
 
@@ -179,7 +183,21 @@ struct SettingsView: View {
                             Button(String(localized: "settings.accounts.disconnect")) {
                                 try? GitHubService.shared.disconnect()
                                 githubLogin = nil
-                                isGitHubConnected = false
+                                isGitHubConnected = GitHubService.shared.isConnected
+                            }
+                            Button(String(localized: "settings.accounts.deleteToken")) {
+                                showingDeleteTokenAlert = true
+                            }
+                            .foregroundColor(.red)
+                            .alert(String(localized: "settings.accounts.deleteToken.confirm.title"), isPresented: $showingDeleteTokenAlert) {
+                                Button(String(localized: "button.cancel"), role: .cancel) {}
+                                Button(String(localized: "settings.accounts.deleteToken.confirm.delete"), role: .destructive) {
+                                    try? GitHubService.shared.disconnect()
+                                    githubLogin = nil
+                                    isGitHubConnected = GitHubService.shared.isConnected
+                                }
+                            } message: {
+                                Text(String(localized: "settings.accounts.deleteToken.confirm.message"))
                             }
                         } else {
                             HStack(spacing: 8) {
@@ -197,6 +215,9 @@ struct SettingsView: View {
                 }
 .onChange(of: environment) { env in
                     GitHubService.shared.setEnvironment(env)
+                    // Update connection state for selected environment
+                    isGitHubConnected = GitHubService.shared.isConnected
+                    githubLogin = nil
                 }
                 .sheet(isPresented: $showingGitHubSetup) {
                     GitHubSetupSheet(clientIdInput: $clientIdInput, onSave: {
@@ -226,6 +247,25 @@ struct SettingsView: View {
                         ProgressView()
                             .frame(width: 320, height: 160)
                     }
+                }
+
+                // Delete all tokens (advanced)
+                HStack {
+                    Button(String(localized: "settings.accounts.deleteAllTokens")) {
+                        showingDeleteAllTokensAlert = true
+                    }
+                    .foregroundColor(.red)
+                    .alert(String(localized: "settings.accounts.deleteAllTokens.confirm.title"), isPresented: $showingDeleteAllTokensAlert) {
+                        Button(String(localized: "button.cancel"), role: .cancel) {}
+                        Button(String(localized: "settings.accounts.deleteAllTokens.confirm.delete"), role: .destructive) {
+                            GitHubService.shared.disconnectAll()
+                            githubLogin = nil
+                            isGitHubConnected = GitHubService.shared.isConnected
+                        }
+                    } message: {
+                        Text(String(localized: "settings.accounts.deleteAllTokens.confirm.message"))
+                    }
+                    Spacer()
                 }
 
                 if let err = authErrorMessage {

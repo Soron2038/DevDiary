@@ -111,6 +111,14 @@
 "settings.accounts.connectedAs" = "Connected as %@";
 "settings.accounts.connect" = "Connect to GitHub";
 "settings.accounts.disconnect" = "Disconnect";
+"settings.accounts.deleteToken" = "Delete token";
+"settings.accounts.deleteToken.confirm.title" = "Delete token for selected environment?";
+"settings.accounts.deleteToken.confirm.message" = "The stored GitHub token for the current environment will be removed from Keychain.";
+"settings.accounts.deleteToken.confirm.delete" = "Delete";
+"settings.accounts.deleteAllTokens" = "Delete all tokens";
+"settings.accounts.deleteAllTokens.confirm.title" = "Delete all GitHub tokens?";
+"settings.accounts.deleteAllTokens.confirm.message" = "Removes all stored GitHub tokens (development, production and any legacy entries).";
+"settings.accounts.deleteAllTokens.confirm.delete" = "Delete all";
 "settings.accounts.configure" = "Configure";
 "settings.accounts.configure.help" = "Provide GitHub Client ID"
 ;
