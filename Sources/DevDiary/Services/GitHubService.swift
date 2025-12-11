@@ -13,9 +13,12 @@ final class GitHubService {
     private let tokenAccount = "access_token"
 
     // OAuth constants
-    // Provide client id via environment variable during development.
-    // e.g., export DEV_DIARY_GITHUB_CLIENT_ID=xxxxxxxxxxxxxxxxxxxx
-    private var clientId: String? {
+    // Client ID can be configured by the user in Settings or via environment variable.
+    // Environment variables (fallback): DEV_DIARY_GITHUB_CLIENT_ID or GITHUB_CLIENT_ID
+    var clientId: String? {
+        if let configured = UserDefaults.standard.string(forKey: "GitHubClientID"), !configured.isEmpty {
+            return configured
+        }
         let env = ProcessInfo.processInfo.environment
         return env["DEV_DIARY_GITHUB_CLIENT_ID"] ?? env["GITHUB_CLIENT_ID"]
     }
@@ -23,6 +26,11 @@ final class GitHubService {
     private init() {}
 
     // MARK: - Public API
+
+    func saveClientId(_ value: String?) {
+        let trimmed = (value ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        UserDefaults.standard.set(trimmed, forKey: "GitHubClientID")
+    }
 
     struct DeviceCode: Decodable {
         let device_code: String

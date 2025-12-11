@@ -107,6 +107,21 @@
 "settings.accounts.connectedAs" = "Connected as %@";
 "settings.accounts.connect" = "Connect to GitHub";
 "settings.accounts.disconnect" = "Disconnect";
+"settings.accounts.configure" = "Configure";
+"settings.accounts.configure.help" = "Provide GitHub Client ID"
+;
+
+/* GitHub Setup */
+"github.setup.title" = "Set up GitHub";
+"github.setup.description" = "DevDiary uses GitHub's Device Flow. You only need the Client ID of your GitHub OAuth App (no secret).";
+"github.setup.step1" = "Open GitHub → Developer settings → OAuth Apps → New OAuth App";
+"github.setup.step2" = "Use a callback URL like devdiary://oauth/github or https://localhost (not used by Device Flow)";
+"github.setup.step3" = "Copy the Client ID and paste it below";
+"github.setup.clientId.placeholder" = "Paste GitHub Client ID";
+"github.setup.save" = "Save";
+"github.setup.openGitHub" = "Open GitHub developer settings";
+"github.setup.openDocs" = "Open GitHub docs";
+"github.setup.envvar.hint" = "Alternatively set DEV_DIARY_GITHUB_CLIENT_ID env var";
 
 /* GitHub Device Auth */
 "github.auth.title" = "Connect GitHub";

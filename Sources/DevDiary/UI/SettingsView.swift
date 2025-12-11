@@ -21,6 +21,10 @@ struct SettingsView: View {
     @State private var deviceCode: GitHubService.DeviceCode?
     @State private var authErrorMessage: String?
     @State private var pollingTask: Task<Void, Never>?
+
+    // Setup sheet
+    @State private var showingGitHubSetup = false
+    @State private var clientIdInput: String = UserDefaults.standard.string(forKey: "GitHubClientID") ?? ""
     
     var body: some View {
         ScrollView {
@@ -162,11 +166,28 @@ struct SettingsView: View {
                                 isGitHubConnected = false
                             }
                         } else {
-                            Button(String(localized: "settings.accounts.connect")) {
-                                Task { await startGitHubDeviceFlow() }
+                            HStack(spacing: 8) {
+                                Button(String(localized: "settings.accounts.connect")) {
+                                    Task { await startGitHubDeviceFlow() }
+                                }
+                                Button(String(localized: "settings.accounts.configure")) {
+                                    showingGitHubSetup = true
+                                }
+                                .help(String(localized: "settings.accounts.configure.help"))
                             }
                         }
                     }
+                }
+.sheet(isPresented: $showingGitHubSetup) {
+                    GitHubSetupSheet(clientIdInput: $clientIdInput, onSave: {
+                        GitHubService.shared.saveClientId(clientIdInput)
+                        showingGitHubSetup = false
+                    }, onOpenGitHub: {
+                        if let url = URL(string: "https://github.com/settings/developers") { NSWorkspace.shared.open(url) }
+                    }, onOpenDocs: {
+                        if let url = URL(string: "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#device-flow") { NSWorkspace.shared.open(url) }
+                    })
+                    .frame(width: 520, height: 360)
                 }
                 .sheet(isPresented: $showingGitHubAuth, onDismiss: {
                     pollingTask?.cancel()
@@ -237,6 +258,11 @@ struct SettingsView: View {
     
     private func startGitHubDeviceFlow() async {
         authErrorMessage = nil
+        // Ensure client id is configured
+        guard GitHubService.shared.clientId != nil else {
+            showingGitHubSetup = true
+            return
+        }
         do {
             let device = try await GitHubService.shared.beginDeviceFlow()
             self.deviceCode = device
@@ -331,6 +357,49 @@ private struct GitHubDeviceAuthSheet: View {
                     onCancel()
                 }
             }
+        }
+        .padding()
+    }
+}
+
+// MARK: - GitHub Setup Sheet
+private struct GitHubSetupSheet: View {
+    @Binding var clientIdInput: String
+    let onSave: () -> Void
+    let onOpenGitHub: () -> Void
+    let onOpenDocs: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(String(localized: "github.setup.title")).font(.headline)
+            Text(String(localized: "github.setup.description")).font(.caption).foregroundColor(.secondary)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Label(String(localized: "github.setup.step1"), systemImage: "1.circle")
+                Label(String(localized: "github.setup.step2"), systemImage: "2.circle")
+                Label(String(localized: "github.setup.step3"), systemImage: "3.circle")
+            }
+            .labelStyle(.titleAndIcon)
+
+            HStack(spacing: 8) {
+                TextField(String(localized: "github.setup.clientId.placeholder"), text: $clientIdInput)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.body)
+                Button(String(localized: "github.setup.save")) { onSave() }
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(clientIdInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+
+            HStack(spacing: 12) {
+                Button(String(localized: "github.setup.openGitHub")) { onOpenGitHub() }
+                Button(String(localized: "github.setup.openDocs")) { onOpenDocs() }
+                Spacer()
+                Text(String(localized: "github.setup.envvar.hint"))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
         }
         .padding()
     }
