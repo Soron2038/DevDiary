@@ -444,6 +444,36 @@
         "de" : { "stringUnit" : { "state" : "translated", "value" : "Lizenz" } },
         "en" : { "stringUnit" : { "state" : "translated", "value" : "License" } }
       }
+    },
+    "projects.remove" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Entfernen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove" } }
+      }
+    },
+    "projects.remove.tooltip" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekt aus DevDiary entfernen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove project from DevDiary" } }
+      }
+    },
+    "projects.remove.confirm.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekt entfernen?" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove project?" } }
+      }
+    },
+    "projects.remove.confirm.message" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Projekt und seine Historie (Sessions und Commits) werden aus DevDiary gelöscht. Lokale Dateien bleiben unverändert." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The project and its history (sessions and commits) will be deleted from DevDiary. Local files remain untouched." } }
+      }
+    },
+    "projects.remove.confirm.delete" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Entfernen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove" } }
+      }
     }
   },
   "version" : "1.0"

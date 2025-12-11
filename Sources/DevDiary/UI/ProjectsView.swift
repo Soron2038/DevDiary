@@ -8,6 +8,8 @@ struct ProjectsView: View {
     @State private var selectedProject: Project?
     @State private var isLoading = true
     @State private var showingAddSheet = false
+    @State private var showingRemoveAlert = false
+    @State private var projectToRemove: Project?
     
     var body: some View {
         HSplitView {
@@ -24,6 +26,18 @@ struct ProjectsView: View {
                     }
                     .buttonStyle(.plain)
                     .help(String(localized: "projects.add"))
+                    
+                    Button(action: {
+                        if let selected = selectedProject {
+                            projectToRemove = selected
+                            showingRemoveAlert = true
+                        }
+                    }) {
+                        Image(systemName: "minus")
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(selectedProject == nil)
+                    .help(String(localized: "projects.remove.tooltip"))
                     
                     Button(action: refreshProjects) {
                         Image(systemName: "arrow.clockwise")
@@ -58,7 +72,11 @@ struct ProjectsView: View {
                         ProjectRow(
                             project: project,
                             stats: projectStats[project.id],
-                            onToggleTracking: { toggleTracking(project) }
+                            onToggleTracking: { toggleTracking(project) },
+                            onRemove: {
+                                projectToRemove = project
+                                showingRemoveAlert = true
+                            }
                         )
                     }
                     .listStyle(.plain)
@@ -95,6 +113,14 @@ struct ProjectsView: View {
             AddProjectSheet(onAdd: { path in
                 addProject(at: path)
             })
+        }
+        .alert(String(localized: "projects.remove.confirm.title"), isPresented: $showingRemoveAlert, presenting: projectToRemove) { project in
+            Button(String(localized: "button.cancel"), role: .cancel) {}
+            Button(String(localized: "projects.remove.confirm.delete"), role: .destructive) {
+                removeProject(project)
+            }
+        } message: { _ in
+            Text(String(localized: "projects.remove.confirm.message"))
         }
     }
     
@@ -156,6 +182,18 @@ struct ProjectsView: View {
             // Handle error
         }
     }
+    
+    private func removeProject(_ project: Project) {
+        do {
+            try DatabaseManager.shared.deleteProject(project)
+            if selectedProject?.id == project.id {
+                selectedProject = nil
+            }
+            loadProjects()
+        } catch {
+            // Handle error
+        }
+    }
 }
 
 // MARK: - Supporting Views
@@ -164,6 +202,7 @@ private struct ProjectRow: View {
     let project: Project
     let stats: StatisticsService.ProjectStatistics?
     let onToggleTracking: () -> Void
+    let onRemove: () -> Void
     
     var body: some View {
         HStack {
@@ -196,6 +235,11 @@ private struct ProjectRow: View {
         }
         .padding(.vertical, 4)
         .opacity(project.isTracked ? 1.0 : 0.6)
+        .contextMenu {
+            Button(role: .destructive, action: onRemove) {
+                Label(String(localized: "projects.remove"), systemImage: "trash")
+            }
+        }
     }
 }
 
