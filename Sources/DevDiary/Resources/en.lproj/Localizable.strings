@@ -111,6 +111,7 @@
 "settings.accounts.log.title" = "Activity Log";
 "settings.accounts.log.clear" = "Clear log";
 "settings.accounts.log.empty" = "No entries yet.";
+"settings.accounts.log.retention" = "Retention:";
 "settings.accounts.notConnected" = "Not connected";
 "settings.accounts.connected" = "Connected";
 "settings.accounts.connectedAs" = "Connected as %@";
@@ -148,7 +149,16 @@
 "status.disconnected" = "Disconnected";
 "status.tokenDeleted" = "Token deleted";
 "status.allTokensDeleted" = "All tokens deleted";
+"status.logCleared" = "Log cleared";
 "status.error.authFailed" = "Authorization failed";
+
+/* Retention */
+"settings.retention.1d" = "1 day";
+"settings.retention.7d" = "7 days";
+"settings.retention.30d" = "30 days";
+"settings.retention.90d" = "90 days";
+"settings.retention.180d" = "6 months";
+"settings.retention.365d" = "1 year";
 
 /* GitHub Device Auth */
 "github.auth.title" = "Connect GitHub";

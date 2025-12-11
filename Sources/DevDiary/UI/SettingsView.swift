@@ -40,6 +40,7 @@ struct SettingsView: View {
     // Activity log
     @State private var showLog = false
     @State private var logs: [LogEntry] = []
+    @AppStorage("activityLogRetentionDays") private var activityLogRetentionDays = 30
     
     var body: some View {
         ScrollView {
@@ -188,10 +189,35 @@ struct SettingsView: View {
                                 }
                                 .frame(maxHeight: 160)
 
-                                HStack(spacing: 8) {
-                                    Button(String(localized: "settings.accounts.log.clear")) { logs.removeAll() }
-                                        .buttonStyle(.plain)
+                                HStack(spacing: 12) {
+                                    Button(String(localized: "settings.accounts.log.clear")) {
+                                        ActivityLogService.shared.clear()
+                                        logs.removeAll()
+                                        showBanner(String(localized: "status.logCleared"), kind: .info)
+                                    }
+                                    .buttonStyle(.plain)
+
                                     Spacer()
+
+                                    // Retention picker
+                                    HStack(spacing: 6) {
+                                        Text(String(localized: "settings.accounts.log.retention"))
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Picker("", selection: $activityLogRetentionDays) {
+                                            Text(String(localized: "settings.retention.1d")).tag(1)
+                                            Text(String(localized: "settings.retention.7d")).tag(7)
+                                            Text(String(localized: "settings.retention.30d")).tag(30)
+                                            Text(String(localized: "settings.retention.90d")).tag(90)
+                                            Text(String(localized: "settings.retention.180d")).tag(180)
+                                            Text(String(localized: "settings.retention.365d")).tag(365)
+                                        }
+                                        .onChange(of: activityLogRetentionDays) { newValue in
+                                            ActivityLogService.shared.setRetentionDays(newValue)
+                                            loadLogs()
+                                        }
+                                        .frame(width: 260)
+                                    }
                                 }
                             }
                         }
@@ -376,6 +402,9 @@ struct SettingsView: View {
             }
             .padding()
         }
+        .onAppear {
+            loadLogs()
+        }
     }
     
     private func startGitHubDeviceFlow() async {
@@ -496,9 +525,21 @@ private extension SettingsView {
         switch kind { case .success: return .green; case .error: return .red; case .info: return .blue }
     }
 
+    func loadLogs() {
+        let entries = ActivityLogService.shared.load().map { e in
+            LogEntry(date: e.date, kind: toBannerKind(e.kind), text: e.text)
+        }
+        logs = entries
+    }
+
+    func toBannerKind(_ kind: ActivityLogService.Kind) -> BannerKind {
+        switch kind { case .success: return .success; case .error: return .error; case .info: return .info }
+    }
+
     func appendLog(_ text: String, kind: BannerKind) {
-        logs.append(LogEntry(date: Date(), kind: kind, text: text))
-        if logs.count > 200 { logs.removeFirst(logs.count - 200) }
+        let serviceKind: ActivityLogService.Kind = (kind == .success ? .success : (kind == .error ? .error : .info))
+        let entries = ActivityLogService.shared.append(kind: serviceKind, text: text)
+        logs = entries.map { LogEntry(date: $0.date, kind: toBannerKind($0.kind), text: $0.text) }
     }
 
     func showBanner(_ text: String, kind: BannerKind) {
