@@ -32,6 +32,10 @@ struct SettingsView: View {
     // Setup sheet
     @State private var showingGitHubSetup = false
     @State private var clientIdInput: String = (UserDefaults.standard.string(forKey: "GitHubClientID.dev") ?? "")
+
+    // Status banner
+    @State private var bannerText: String?
+    @State private var bannerKind: BannerKind = .info
     
     var body: some View {
         ScrollView {
@@ -149,6 +153,9 @@ struct SettingsView: View {
                 
                 // Accounts section
                 SettingsSection(title: String(localized: "settings.accounts.title")) {
+                    if let text = bannerText {
+                        StatusBanner(text: text, kind: bannerKind)
+                    }
                     // Environment picker
                     VStack(alignment: .leading, spacing: 8) {
                         Text(String(localized: "settings.accounts.environment.title")).font(.subheadline)
@@ -184,6 +191,7 @@ struct SettingsView: View {
                                 try? GitHubService.shared.disconnect()
                                 githubLogin = nil
                                 isGitHubConnected = GitHubService.shared.isConnected
+                                showBanner(String(localized: "status.disconnected"), kind: .success)
                             }
                             Button(String(localized: "settings.accounts.deleteToken")) {
                                 showingDeleteTokenAlert = true
@@ -195,6 +203,7 @@ struct SettingsView: View {
                                     try? GitHubService.shared.disconnect()
                                     githubLogin = nil
                                     isGitHubConnected = GitHubService.shared.isConnected
+                                    showBanner(String(localized: "status.tokenDeleted"), kind: .success)
                                 }
                             } message: {
                                 Text(String(localized: "settings.accounts.deleteToken.confirm.message"))
@@ -224,6 +233,7 @@ struct SettingsView: View {
                         GitHubService.shared.setEnvironment(environment)
                         GitHubService.shared.saveClientId(clientIdInput)
                         showingGitHubSetup = false
+                        showBanner(String(localized: "status.clientIdSaved"), kind: .success)
                     }, onOpenGitHub: {
                         if let url = URL(string: "https://github.com/settings/developers") { NSWorkspace.shared.open(url) }
                     }, onOpenDocs: {
@@ -261,6 +271,7 @@ struct SettingsView: View {
                             GitHubService.shared.disconnectAll()
                             githubLogin = nil
                             isGitHubConnected = GitHubService.shared.isConnected
+                            showBanner(String(localized: "status.allTokensDeleted"), kind: .success)
                         }
                     } message: {
                         Text(String(localized: "settings.accounts.deleteAllTokens.confirm.message"))
@@ -332,6 +343,7 @@ struct SettingsView: View {
             // Open browser immediately for best UX
             let url = device.verification_uri_complete ?? device.verification_uri
             GitHubService.shared.openInBrowser(url)
+            showBanner(String(localized: "status.openingBrowser"), kind: .info)
 
             // Start polling
             pollingTask = Task { [device] in
@@ -345,6 +357,8 @@ struct SettingsView: View {
                     await MainActor.run {
                         self.isGitHubConnected = true
                         self.showingGitHubAuth = false
+                        let msg = self.githubLogin != nil ? String(format: String(localized: "status.connectedAs"), self.githubLogin!) : String(localized: "status.connected")
+                        self.showBanner(msg, kind: .success)
                     }
                 } catch is CancellationError {
                     // ignored
@@ -352,6 +366,7 @@ struct SettingsView: View {
                     await MainActor.run {
                         self.authErrorMessage = error.localizedDescription
                         self.showingGitHubAuth = false
+                        self.showBanner(String(localized: "status.error.authFailed"), kind: .error)
                     }
                 }
             }
@@ -383,6 +398,52 @@ struct SettingsView: View {
             // Handle error silently for now
         }
         #endif
+    }
+}
+
+// MARK: - Status Banner
+private enum BannerKind { case success, error, info }
+
+private struct StatusBanner: View {
+    let text: String
+    let kind: BannerKind
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: iconName)
+            Text(text).font(.caption).fontWeight(.medium)
+            Spacer()
+        }
+        .padding(8)
+        .background(background)
+        .cornerRadius(6)
+        .transition(.opacity.combined(with: .move(edge: .top)))
+    }
+
+    private var background: Color {
+        switch kind {
+        case .success: return Color.green.opacity(0.15)
+        case .error: return Color.red.opacity(0.15)
+        case .info: return Color.blue.opacity(0.12)
+        }
+    }
+    private var iconName: String {
+        switch kind {
+        case .success: return "checkmark.circle"
+        case .error: return "exclamationmark.triangle"
+        case .info: return "info.circle"
+        }
+    }
+}
+
+private extension SettingsView {
+    func showBanner(_ text: String, kind: BannerKind) {
+        withAnimation { self.bannerText = text; self.bannerKind = kind }
+        // Auto-hide after 3 seconds
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            withAnimation { self.bannerText = nil }
+        }
     }
 }
 

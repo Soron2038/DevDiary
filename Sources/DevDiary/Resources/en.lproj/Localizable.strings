@@ -135,6 +135,16 @@
 "github.setup.openDocs" = "Open GitHub docs";
 "github.setup.envvar.hint" = "Alternatively set DEV_DIARY_GITHUB_CLIENT_ID env var";
 
+/* Status */
+"status.clientIdSaved" = "GitHub Client ID saved";
+"status.openingBrowser" = "Opening GitHub in browser…";
+"status.connected" = "Connected to GitHub";
+"status.connectedAs" = "Connected as %@";
+"status.disconnected" = "Disconnected";
+"status.tokenDeleted" = "Token deleted";
+"status.allTokensDeleted" = "All tokens deleted";
+"status.error.authFailed" = "Authorization failed";
+
 /* GitHub Device Auth */
 "github.auth.title" = "Connect GitHub";
 "github.auth.instructions" = "Open GitHub in your browser and enter this code to authorize DevDiary.";
