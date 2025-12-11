@@ -36,6 +36,10 @@ struct SettingsView: View {
     // Status banner
     @State private var bannerText: String?
     @State private var bannerKind: BannerKind = .info
+
+    // Activity log
+    @State private var showLog = false
+    @State private var logs: [LogEntry] = []
     
     var body: some View {
         ScrollView {
@@ -156,6 +160,52 @@ struct SettingsView: View {
                     if let text = bannerText {
                         StatusBanner(text: text, kind: bannerKind)
                     }
+
+                    // Unobtrusive log area (collapsed by default)
+                    DisclosureGroup(isExpanded: $showLog) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            if logs.isEmpty {
+                                Text(String(localized: "settings.accounts.log.empty"))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .padding(8)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(Color(nsColor: .controlBackgroundColor))
+                                    .cornerRadius(6)
+                            } else {
+                                ScrollView {
+                                    LazyVStack(alignment: .leading, spacing: 6) {
+                                        ForEach(logs) { entry in
+                                            HStack(alignment: .top, spacing: 6) {
+                                                Image(systemName: iconName(for: entry.kind))
+                                                    .foregroundColor(iconColor(for: entry.kind))
+                                                Text("\(entry.date.formatted(date: .omitted, time: .standard)) · \(entry.text)")
+                                                    .font(.caption)
+                                            }
+                                        }
+                                    }
+                                    .padding(8)
+                                }
+                                .frame(maxHeight: 160)
+
+                                HStack(spacing: 8) {
+                                    Button(String(localized: "settings.accounts.log.clear")) { logs.removeAll() }
+                                        .buttonStyle(.plain)
+                                    Spacer()
+                                }
+                            }
+                        }
+                        .transition(.opacity)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "note.text")
+                                .foregroundColor(.secondary)
+                            Text(String(localized: "settings.accounts.log.title"))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.top, 2)
                     // Environment picker
                     VStack(alignment: .leading, spacing: 8) {
                         Text(String(localized: "settings.accounts.environment.title")).font(.subheadline)
@@ -437,7 +487,22 @@ private struct StatusBanner: View {
 }
 
 private extension SettingsView {
+    struct LogEntry: Identifiable { let id = UUID(); let date: Date; let kind: BannerKind; let text: String }
+
+    func iconName(for kind: BannerKind) -> String {
+        switch kind { case .success: return "checkmark.circle"; case .error: return "exclamationmark.triangle"; case .info: return "info.circle" }
+    }
+    func iconColor(for kind: BannerKind) -> Color {
+        switch kind { case .success: return .green; case .error: return .red; case .info: return .blue }
+    }
+
+    func appendLog(_ text: String, kind: BannerKind) {
+        logs.append(LogEntry(date: Date(), kind: kind, text: text))
+        if logs.count > 200 { logs.removeFirst(logs.count - 200) }
+    }
+
     func showBanner(_ text: String, kind: BannerKind) {
+        appendLog(text, kind: kind)
         withAnimation { self.bannerText = text; self.bannerKind = kind }
         // Auto-hide after 3 seconds
         Task { @MainActor in
