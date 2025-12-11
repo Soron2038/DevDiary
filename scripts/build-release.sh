@@ -4,7 +4,12 @@ set -e
 # DevDiary Release Build Script
 # Creates a .app bundle and DMG installer
 
-VERSION="1.0.0"
+# Version source: VERSION file (fallback to 1.0.0)
+if [ -f "$(dirname "$0")/../VERSION" ]; then
+  VERSION="$(cat "$(dirname "$0")/../VERSION" | tr -d '\n')"
+else
+  VERSION="1.0.0"
+fi
 APP_NAME="DevDiary"
 BUNDLE_ID="com.devdiary.app"
 
@@ -38,6 +43,9 @@ cp "$BUILD_DIR/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/"
 
 # Copy Info.plist
 cp "$DIST_DIR/Info.plist" "$APP_BUNDLE/Contents/"
+
+# Inject version into Info.plist
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$APP_BUNDLE/Contents/Info.plist" >/dev/null 2>&1 || true
 
 # Copy and convert app icon
 echo "🎨 Processing app icon..."
