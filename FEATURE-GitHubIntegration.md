@@ -278,19 +278,86 @@ UI/
 - **Bitbucket** - Atlassian OAuth
 - **Self-hosted** - Support für Custom-URLs
 
-### 6.2 Erweiterte GitHub-Features
-- Pull Request Übersicht
-- Issues anzeigen
-- Commit-History mit GitHub vergleichen
-- GitHub Actions Status
+### 6.2 Repository-Übersicht & Management
+- **Remote-Repos anzeigen:** Liste aller GitHub-Repositories des Users (public & private)
+- **Lokal-Status erkennen:** Markierung welche Repos bereits lokal geklont sind
+- **Quick-Clone:** Ein-Klick Klonen von Remote-Repos in konfigurierbares Verzeichnis
+- **Archivierte Repos ausblenden:** Filter für aktive vs. archivierte Repositories
 
-### 6.3 Projekt-Synchronisation
+### 6.3 Aktivitäts-Enrichment
+- **Commit-Autoren-Avatare:** GitHub-Profilbilder bei Commits anzeigen
+- **Commit-Links:** Direktlinks zu Commits auf GitHub öffnen
+- **Branch-Info:** Aktueller Branch und Remote-Tracking-Status
+- **Ahead/Behind-Status:** Zeigen wie viele Commits lokal vs. remote voraus/zurück
+
+### 6.4 Pull Request Integration
+- **Offene PRs anzeigen:** Liste der PRs für jedes verbundene Projekt
+- **PR-Status in Projektübersicht:** Badge mit Anzahl offener PRs
+- **Review-Requests:** Benachrichtigung über ausstehende Reviews
+- **PR-Erstellung:** Schnelles Erstellen eines PRs aus DevDiary heraus
+
+### 6.5 Issues & Project Boards
+- **Zugewiesene Issues:** Anzeige der dem User zugewiesenen Issues
+- **Issue-Referenzen in Commits:** Automatisches Erkennen von `#123` in Commit-Messages
+- **Quick-Issue-Erstellung:** Neues Issue direkt aus DevDiary erstellen
+- **Project Board Status:** Kanban-Status der verknüpften Issues
+
+### 6.6 GitHub Actions & CI/CD
+- **Workflow-Status:** Letzter CI-Status pro Repository (grün/rot/gelb)
+- **Build-Benachrichtigungen:** Optional: Alert bei fehlgeschlagenen Builds
+- **Workflow-Trigger:** Manuelles Auslösen von Workflows aus DevDiary
+
+### 6.7 Statistiken & Insights
+- **Contribution-Graph:** GitHub-Contribution-Heatmap in DevDiary integrieren
+- **Commit-Streak:** Aktuelle Serie von aufeinanderfolgenden Commit-Tagen
+- **Repo-Statistiken:** Stars, Forks, Watchers für eigene Repos
+- **Code-Frequency:** Lines added/removed über Zeit (aus GitHub API)
+
+### 6.8 Collaboration Features
+- **Team-Aktivität:** Commits von Team-Mitgliedern in Organisations-Repos
+- **Mention-Benachrichtigungen:** Wenn User in Commits/Issues erwähnt wird
+- **Repository-Einladungen:** Ausstehende Einladungen zu Repos anzeigen
+
+### 6.9 Gists & Code Snippets
+- **Gists-Übersicht:** Liste der eigenen Gists
+- **Quick-Gist:** Code-Schnipsel schnell als Gist speichern
+- **Gist-Suche:** In eigenen Gists suchen
+
+### 6.10 Sicherheit & Notifications
+- **Dependabot-Alerts:** Sicherheitswarnungen für Dependencies anzeigen
+- **GitHub-Benachrichtigungen:** Ungelesene Notifications-Count im Menü
+- **Secret-Scanning-Alerts:** Warnungen bei exponierten Secrets
+
+### 6.11 Projekt-Synchronisation
 - Automatisches Klonen bei erstem Commit
 - Remote-URL aus Projekt-Pfad ableiten
+- Bidirektionale Verknüpfung: Lokales Projekt ↔ GitHub Repo
 
 ---
 
-## 7. Offene Fragen
+## 7. Implementierungs-Priorisierung (nach GitHub-Verbindung)
+
+### Hohe Priorität (Schneller Mehrwert)
+1. **Repository-Übersicht** - Zeigt sofort den Nutzen der Verbindung
+2. **Lokal-Status erkennen** - Hilft bei der Projekt-Organisation
+3. **Quick-Clone** - Praktische Zeitersparnis
+4. **Commit-Links** - Einfache Brücke zu GitHub
+
+### Mittlere Priorität (Guter Mehrwert)
+5. **Offene PRs anzeigen** - Wichtig für tägliche Arbeit
+6. **GitHub Actions Status** - CI-Feedback auf einen Blick
+7. **Ahead/Behind-Status** - Hilft beim Sync-Überblick
+8. **Zugewiesene Issues** - Task-Übersicht
+
+### Niedrigere Priorität (Nice-to-have)
+9. **Contribution-Graph** - Motivations-Feature
+10. **Gists** - Spezial-Feature
+11. **Team-Aktivität** - Für Teams relevant
+12. **Dependabot-Alerts** - Sicherheits-Feature
+
+---
+
+## 8. Offene Fragen
 
 1. **OAuth App Hosting:** Wo wird die GitHub OAuth App registriert?
    - Persönlicher Account des Entwicklers?
