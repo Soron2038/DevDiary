@@ -304,36 +304,6 @@ struct SettingsView: View {
                     isGitHubConnected = GitHubService.shared.isConnected
                     githubLogin = nil
                 }
-                .sheet(isPresented: $showingGitHubSetup) {
-                    GitHubSetupSheet(clientIdInput: $clientIdInput, onSave: {
-                        GitHubService.shared.setEnvironment(environment)
-                        GitHubService.shared.saveClientId(clientIdInput)
-                        showingGitHubSetup = false
-                        showBanner(String(localized: "status.clientIdSaved"), kind: .success)
-                    }, onOpenGitHub: {
-                        if let url = URL(string: "https://github.com/settings/developers") { NSWorkspace.shared.open(url) }
-                    }, onOpenDocs: {
-                        if let url = URL(string: "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#device-flow") { NSWorkspace.shared.open(url) }
-                    })
-                    .frame(width: 520, height: 360)
-                }
-                .sheet(isPresented: $showingGitHubAuth, onDismiss: {
-                    pollingTask?.cancel()
-                    pollingTask = nil
-                }) {
-                    if let deviceCode {
-                        GitHubDeviceAuthSheet(device: deviceCode, onOpen: {
-                            let url = deviceCode.verification_uri_complete ?? deviceCode.verification_uri
-                            GitHubService.shared.openInBrowser(url)
-                        }, onCancel: {
-                            showingGitHubAuth = false
-                        })
-                        .frame(width: 420, height: 240)
-                    } else {
-                        ProgressView()
-                            .frame(width: 320, height: 160)
-                    }
-                }
 
                 // Delete all tokens (advanced)
                 HStack {
@@ -405,43 +375,81 @@ struct SettingsView: View {
         .onAppear {
             loadLogs()
         }
+        .sheet(isPresented: $showingGitHubSetup) {
+            GitHubSetupSheet(clientIdInput: $clientIdInput, onSave: {
+                GitHubService.shared.setEnvironment(environment)
+                GitHubService.shared.saveClientId(clientIdInput)
+                showingGitHubSetup = false
+                showBanner(String(localized: "status.clientIdSaved"), kind: .success)
+            }, onOpenGitHub: {
+                if let url = URL(string: "https://github.com/settings/developers") { NSWorkspace.shared.open(url) }
+            }, onOpenDocs: {
+                if let url = URL(string: "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#device-flow") { NSWorkspace.shared.open(url) }
+            })
+            .frame(width: 520, height: 360)
+        }
+        .sheet(isPresented: $showingGitHubAuth, onDismiss: {
+            pollingTask?.cancel()
+            pollingTask = nil
+        }) {
+            if let deviceCode {
+                GitHubDeviceAuthSheet(device: deviceCode, onOpen: {
+                    let url = deviceCode.verification_uri_complete ?? deviceCode.verification_uri
+                    GitHubService.shared.openInBrowser(url)
+                }, onCancel: {
+                    showingGitHubAuth = false
+                })
+                .frame(width: 420, height: 240)
+            } else {
+                ProgressView()
+                    .frame(width: 320, height: 160)
+            }
+        }
     }
     
     private func startGitHubDeviceFlow() async {
+        FileLogger.shared.log("startGitHubDeviceFlow called")
         authErrorMessage = nil
         // Ensure client id is configured
         guard GitHubService.shared.clientId != nil else {
+            FileLogger.shared.log("No client ID - showing setup sheet")
             showingGitHubSetup = true
             return
         }
         do {
+            FileLogger.shared.log("Calling beginDeviceFlow...")
             let device = try await GitHubService.shared.beginDeviceFlow()
+            FileLogger.shared.log("Got device code: \(device.user_code)")
             self.deviceCode = device
+            FileLogger.shared.log("Setting showingGitHubAuth = true")
             showingGitHubAuth = true
 
-            // Open browser immediately for best UX
-            let url = device.verification_uri_complete ?? device.verification_uri
-            GitHubService.shared.openInBrowser(url)
-            showBanner(String(localized: "status.openingBrowser"), kind: .info)
+            // Do NOT auto-open browser – let user see the code first and click "Open in Browser"
 
             // Start polling
+            FileLogger.shared.log("Starting polling task")
             pollingTask = Task { [device] in
                 do {
+                    FileLogger.shared.log("Polling for token...")
                     try await GitHubService.shared.pollForToken(deviceCode: device.device_code, interval: device.interval)
+                    FileLogger.shared.log("Token received!")
                     // Small delay to ensure GitHub has the token ready for API calls
                     try? await Task.sleep(nanoseconds: 300_000_000)
                     if let login = try? await GitHubService.shared.fetchCurrentUserLogin() {
+                        FileLogger.shared.log("Fetched login: \(login)")
                         await MainActor.run { self.githubLogin = login }
                     }
                     await MainActor.run {
+                        FileLogger.shared.log("Auth complete, updating UI")
                         self.isGitHubConnected = true
                         self.showingGitHubAuth = false
                         let msg = self.githubLogin != nil ? String(format: String(localized: "status.connectedAs"), self.githubLogin!) : String(localized: "status.connected")
                         self.showBanner(msg, kind: .success)
                     }
                 } catch is CancellationError {
-                    // ignored
+                    FileLogger.shared.log("Polling cancelled")
                 } catch {
+                    FileLogger.shared.log("Polling error: \(error)")
                     await MainActor.run {
                         self.authErrorMessage = error.localizedDescription
                         self.showingGitHubAuth = false
@@ -450,7 +458,9 @@ struct SettingsView: View {
                 }
             }
         } catch {
+            FileLogger.shared.log("beginDeviceFlow threw: \(error)")
             authErrorMessage = error.localizedDescription
+            showBanner(error.localizedDescription, kind: .error)
         }
     }
 

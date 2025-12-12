@@ -147,34 +147,61 @@ final class GitHubService {
 
     // Begin the device flow: returns instructions for the user
     func beginDeviceFlow(scopes: String = "repo read:user") async throws -> DeviceCode {
-        guard let clientId else { throw AuthError.missingClientId }
+        FileLogger.shared.log("beginDeviceFlow called, scopes=\(scopes)")
+        guard let clientId else {
+            FileLogger.shared.log("ERROR: No client ID configured")
+            throw AuthError.missingClientId
+        }
+        FileLogger.shared.log("Using clientId: \(clientId.prefix(8))...")
         guard let url = URL(string: "https://github.com/login/device/code") else { throw AuthError.invalidURL }
+
+        // URL-encode the scope (spaces → %20)
+        let encodedScope = scopes.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? scopes
+        FileLogger.shared.log("Encoded scope: \(encodedScope)")
 
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Accept")
-        let body = "client_id=\(clientId)&scope=\(scopes)"
+        let body = "client_id=\(clientId)&scope=\(encodedScope)"
         req.httpBody = body.data(using: .utf8)
         req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
 
+        FileLogger.shared.log("Sending POST to \(url.absoluteString)")
         let (data, resp) = try await URLSession.shared.data(for: req)
-        guard let http = resp as? HTTPURLResponse, http.statusCode == 200 else {
-            let text = String(data: data, encoding: .utf8) ?? "<no body>"
-            logger.error("Device code request failed: \(text)")
-            throw AuthError.unknown("Failed to start device flow")
+        guard let http = resp as? HTTPURLResponse else {
+            FileLogger.shared.log("ERROR: No HTTP response object")
+            throw AuthError.unknown("No HTTP response")
         }
-        let device = try JSONDecoder().decode(DeviceCode.self, from: data)
-        return device
+        let responseText = String(data: data, encoding: .utf8) ?? "<no body>"
+        FileLogger.shared.log("Response status=\(http.statusCode), body=\(responseText)")
+        logger.info("Device code response (\(http.statusCode)): \(responseText)")
+        
+        guard http.statusCode == 200 else {
+            FileLogger.shared.log("ERROR: Non-200 status")
+            logger.error("Device code request failed: \(responseText)")
+            throw AuthError.unknown("GitHub error (\(http.statusCode)): \(responseText)")
+        }
+        do {
+            let device = try JSONDecoder().decode(DeviceCode.self, from: data)
+            FileLogger.shared.log("SUCCESS: Got device code, user_code=\(device.user_code)")
+            return device
+        } catch {
+            FileLogger.shared.log("ERROR decoding DeviceCode: \(error)")
+            throw error
+        }
     }
 
     // Poll for access token, saves token in Keychain on success
     func pollForToken(deviceCode: String, interval: Int) async throws {
+        FileLogger.shared.log("pollForToken started, interval=\(interval)")
         guard let clientId else { throw AuthError.missingClientId }
         guard let url = URL(string: "https://github.com/login/oauth/access_token") else { throw AuthError.invalidURL }
 
         var currentInterval = max(5, interval)
+        var pollCount = 0
         while true {
             try await Task.sleep(nanoseconds: UInt64(currentInterval) * 1_000_000_000)
+            pollCount += 1
 
             var req = URLRequest(url: url)
             req.httpMethod = "POST"
@@ -185,33 +212,45 @@ final class GitHubService {
 
             let (data, resp) = try await URLSession.shared.data(for: req)
             guard let http = resp as? HTTPURLResponse else { continue }
+            
+            let responseText = String(data: data, encoding: .utf8) ?? "<no body>"
+            FileLogger.shared.log("Poll #\(pollCount): status=\(http.statusCode), body=\(responseText)")
 
-            if http.statusCode == 200 {
-                // Success
-                let token = try JSONDecoder().decode(AccessTokenResponse.self, from: data)
-                let account = tokenAccount(for: selectedEnvironment)
-                try KeychainService.shared.setPassword(Data(token.access_token.utf8), service: keychainService, account: account)
-                logger.info("GitHub token stored in Keychain for env \(self.selectedEnvironment.rawValue)")
-                return
-            } else {
-                // Error payload is JSON: {"error":"authorization_pending"|"slow_down"|"expired_token"|"access_denied"}
-                if let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any], let err = obj["error"] as? String {
-                    switch err {
-                    case "authorization_pending":
-                        continue // keep polling
-                    case "slow_down":
-                        currentInterval += 5
-                        continue
-                    case "expired_token":
-                        throw AuthError.expired
-                    case "access_denied":
-                        throw AuthError.accessDenied
-                    default:
-                        throw AuthError.unknown(err)
-                    }
+            // GitHub returns 200 for BOTH success AND pending/error states!
+            // First check if this is an error response
+            if let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any], let err = obj["error"] as? String {
+                FileLogger.shared.log("Poll #\(pollCount): error=\(err)")
+                switch err {
+                case "authorization_pending":
+                    continue // keep polling - user hasn't authorized yet
+                case "slow_down":
+                    currentInterval += 5
+                    FileLogger.shared.log("Slowing down, new interval=\(currentInterval)")
+                    continue
+                case "expired_token":
+                    throw AuthError.expired
+                case "access_denied":
+                    throw AuthError.accessDenied
+                default:
+                    throw AuthError.unknown(err)
                 }
-                let text = String(data: data, encoding: .utf8) ?? "<no body>"
-                throw AuthError.unknown("HTTP \(http.statusCode): \(text)")
+            }
+            
+            // No error field - try to decode the token
+            if http.statusCode == 200 {
+                do {
+                    let token = try JSONDecoder().decode(AccessTokenResponse.self, from: data)
+                    FileLogger.shared.log("SUCCESS: Got access token")
+                    let account = tokenAccount(for: selectedEnvironment)
+                    try KeychainService.shared.setPassword(Data(token.access_token.utf8), service: keychainService, account: account)
+                    logger.info("GitHub token stored in Keychain for env \(self.selectedEnvironment.rawValue)")
+                    return
+                } catch {
+                    FileLogger.shared.log("Failed to decode token response: \(error)")
+                    throw AuthError.unknown("Invalid token response: \(responseText)")
+                }
+            } else {
+                throw AuthError.unknown("HTTP \(http.statusCode): \(responseText)")
             }
         }
     }
