@@ -140,6 +140,63 @@ final class GitService {
         return name.isEmpty ? nil : name
     }
     
+    // MARK: - Remote URLs
+    
+    /// Get the remote URL for origin (or specified remote)
+    func getRemoteURL(at path: String, remote: String = "origin") -> String? {
+        let result = runGitCommand(["remote", "get-url", remote], in: path)
+        guard result.success else { return nil }
+        let url = result.output.trimmingCharacters(in: .whitespacesAndNewlines)
+        return url.isEmpty ? nil : url
+    }
+    
+    /// Convert a git remote URL to HTTPS format for browser access
+    /// Handles: git@github.com:user/repo.git -> https://github.com/user/repo
+    ///          https://github.com/user/repo.git -> https://github.com/user/repo
+    func normalizeToHTTPS(_ remoteURL: String) -> String? {
+        var url = remoteURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Remove .git suffix if present
+        if url.hasSuffix(".git") {
+            url = String(url.dropLast(4))
+        }
+        
+        // Convert SSH format: git@github.com:user/repo -> https://github.com/user/repo
+        if url.hasPrefix("git@") {
+            // git@github.com:user/repo
+            let withoutPrefix = url.dropFirst(4) // "github.com:user/repo"
+            if let colonIndex = withoutPrefix.firstIndex(of: ":") {
+                let host = withoutPrefix[..<colonIndex]
+                let path = withoutPrefix[withoutPrefix.index(after: colonIndex)...]
+                return "https://\(host)/\(path)"
+            }
+        }
+        
+        // Already HTTPS or HTTP
+        if url.hasPrefix("https://") || url.hasPrefix("http://") {
+            return url
+        }
+        
+        return nil
+    }
+    
+    /// Get the GitHub URL for a specific commit
+    /// Returns nil if not a GitHub repository or no remote configured
+    func getGitHubCommitURL(hash: String, at path: String) -> URL? {
+        guard let remoteURL = getRemoteURL(at: path),
+              let httpsURL = normalizeToHTTPS(remoteURL),
+              httpsURL.contains("github.com") else {
+            return nil
+        }
+        return URL(string: "\(httpsURL)/commit/\(hash)")
+    }
+    
+    /// Check if a repository has a GitHub remote
+    func hasGitHubRemote(at path: String) -> Bool {
+        guard let remoteURL = getRemoteURL(at: path) else { return false }
+        return remoteURL.contains("github.com")
+    }
+    
     // MARK: - Private
     
     private func parseCommits(_ output: String) -> [GitCommit] {

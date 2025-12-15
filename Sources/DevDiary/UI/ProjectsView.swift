@@ -1,8 +1,42 @@
 import SwiftUI
 import AppKit
 
-/// Projects management view
+/// Tab selection for Projects view
+enum ProjectsTab: String, CaseIterable {
+    case local
+    case remote
+}
+
+/// Projects container view with tab picker
 struct ProjectsView: View {
+    @State private var selectedTab: ProjectsTab = .local
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Tab picker
+            Picker("", selection: $selectedTab) {
+                Text("projects.tab.local").tag(ProjectsTab.local)
+                Text("projects.tab.remote").tag(ProjectsTab.remote)
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 200)
+            .padding(.vertical, 8)
+            
+            Divider()
+            
+            // Content based on selected tab
+            switch selectedTab {
+            case .local:
+                LocalProjectsView()
+            case .remote:
+                RemoteRepositoriesView()
+            }
+        }
+    }
+}
+
+/// Local projects management view
+struct LocalProjectsView: View {
     @State private var projects: [Project] = []
     @State private var projectStats: [UUID: StatisticsService.ProjectStatistics] = [:]
     @State private var selectedProject: Project?

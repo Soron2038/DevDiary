@@ -278,4 +278,79 @@ final class GitHubService {
         guard let url = URL(string: urlString) else { return }
         NSWorkspace.shared.open(url)
     }
+    
+    // MARK: - Repository API
+    
+    /// Fetch all repositories for the authenticated user
+    /// - Parameters:
+    ///   - includeArchived: Whether to include archived repos (default: false)
+    ///   - includeForks: Whether to include forked repos (default: true)
+    /// - Returns: Array of repositories sorted by last update
+    func fetchRepositories(includeArchived: Bool = false, includeForks: Bool = true) async throws -> [GitHubRepository] {
+        guard let token = currentAccessToken() else { throw AuthError.unknown("Not connected to GitHub") }
+        
+        var allRepos: [GitHubRepository] = []
+        var page = 1
+        let perPage = 100
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        while true {
+            guard let url = URL(string: "https://api.github.com/user/repos?per_page=\(perPage)&page=\(page)&sort=updated&direction=desc") else {
+                throw AuthError.invalidURL
+            }
+            
+            var req = URLRequest(url: url)
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+            
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            guard let http = resp as? HTTPURLResponse else {
+                throw AuthError.unknown("No HTTP response")
+            }
+            
+            if http.statusCode == 401 {
+                throw AuthError.unknown("Token expired or invalid")
+            }
+            
+            guard http.statusCode == 200 else {
+                let text = String(data: data, encoding: .utf8) ?? "<no body>"
+                logger.error("Fetch repos failed: \(text)")
+                throw AuthError.unknown("GitHub API error (\(http.statusCode))")
+            }
+            
+            let repos = try decoder.decode([GitHubRepository].self, from: data)
+            
+            if repos.isEmpty {
+                break
+            }
+            
+            allRepos.append(contentsOf: repos)
+            
+            // GitHub returns fewer items than perPage when we've reached the last page
+            if repos.count < perPage {
+                break
+            }
+            
+            page += 1
+            
+            // Safety limit to prevent infinite loops
+            if page > 20 {
+                logger.warning("Reached page limit while fetching repositories")
+                break
+            }
+        }
+        
+        // Filter based on parameters
+        var filtered = allRepos
+        if !includeArchived {
+            filtered = filtered.filter { !$0.isArchived }
+        }
+        if !includeForks {
+            filtered = filtered.filter { !$0.isFork }
+        }
+        
+        return filtered
+    }
 }

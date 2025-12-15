@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 /// Today's activity view showing sessions, commits and statistics
 struct TodayView: View {
@@ -6,6 +7,7 @@ struct TodayView: View {
     @State private var commits: [Commit] = []
     @State private var sessions: [Session] = []
     @State private var projects: [UUID: Project] = [:]
+    @State private var sessionToProject: [UUID: Project] = [:] // sessionId -> Project
     @State private var isLoading = true
     
     var body: some View {
@@ -156,7 +158,7 @@ struct TodayView: View {
                 .frame(maxWidth: .infinity)
             } else {
                 List(commits, id: \.id) { commit in
-                    CommitRow(commit: commit)
+                    CommitRow(commit: commit, project: sessionToProject[commit.sessionId])
                 }
                 .listStyle(.plain)
             }
@@ -199,6 +201,13 @@ struct TodayView: View {
             // Load projects for sessions
             let allProjects = try DatabaseManager.shared.getAllProjects()
             projects = Dictionary(uniqueKeysWithValues: allProjects.map { ($0.id, $0) })
+            
+            // Build sessionId -> Project mapping for commits
+            for session in sessions {
+                if let project = projects[session.projectId] {
+                    sessionToProject[session.id] = project
+                }
+            }
             
             isLoading = false
         } catch {
@@ -310,7 +319,14 @@ private struct SessionRow: View {
 
 private struct CommitRow: View {
     let commit: Commit
+    let project: Project?
     @State private var isExpanded = false
+    @State private var isHovered = false
+    
+    private var gitHubURL: URL? {
+        guard let project = project else { return nil }
+        return GitService.shared.getGitHubCommitURL(hash: commit.hash, at: project.path)
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -346,6 +362,18 @@ private struct CommitRow: View {
                             .font(.caption)
                             .foregroundColor(.red)
                     }
+                    
+                    // GitHub link button (only visible on hover if available)
+                    if let url = gitHubURL {
+                        Button(action: { NSWorkspace.shared.open(url) }) {
+                            Image(systemName: "arrow.up.right.square")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .opacity(isHovered ? 1.0 : 0.0)
+                        .help(String(localized: "commit.openOnGitHub"))
+                    }
                 }
             }
             
@@ -359,6 +387,11 @@ private struct CommitRow: View {
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
         .onTapGesture {
             withAnimation(.easeInOut(duration: 0.2)) {
                 isExpanded.toggle()

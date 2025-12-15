@@ -184,3 +184,24 @@
 "onboarding.setup.paths" = "Folders to search:";
 "onboarding.setup.discovering" = "Discovering repositories...";
 "onboarding.setup.found" = "%d repositories found";
+
+/* Projects Tabs */
+"projects.tab.local" = "Local";
+"projects.tab.remote" = "Remote";
+
+/* Commits */
+"commit.openOnGitHub" = "Open on GitHub";
+
+/* Remote Repositories */
+"remote.search" = "Search...";
+"remote.showForks" = "Forks";
+"remote.showArchived" = "Archived";
+"remote.refresh" = "Refresh";
+"remote.loading" = "Loading repositories...";
+"remote.empty" = "No repositories found";
+"remote.retry" = "Retry";
+"remote.notConnected" = "Not connected to GitHub";
+"remote.notConnected.hint" = "Connect your GitHub account in Settings to see your remote repositories.";
+"remote.localAvailable" = "Available locally";
+"remote.notLocal" = "Not local";
+"remote.openInBrowser" = "Open on GitHub";
