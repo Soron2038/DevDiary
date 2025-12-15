@@ -11,6 +11,13 @@ struct RemoteRepositoriesView: View {
     @State private var showArchived = false
     @State private var showForks = true
     
+    // Clone state
+    @AppStorage("defaultCloneDirectory") private var defaultCloneDirectory = "~/Developer"
+    @State private var cloningRepoId: Int? = nil
+    @State private var cloneError: String?
+    @State private var showCloneSuccess = false
+    @State private var lastClonedPath: String?
+    
     private var filteredRepositories: [GitHubRepository] {
         if searchText.isEmpty {
             return repositories
@@ -55,8 +62,58 @@ struct RemoteRepositoriesView: View {
                 }
                 .buttonStyle(.plain)
                 .help(String(localized: "remote.refresh"))
+                
+                // Clone directory picker
+                Button(action: selectCloneDirectory) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "folder")
+                        Text(cloneDirectoryDisplayName)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                    .font(.caption)
+                }
+                .buttonStyle(.plain)
+                .help(String(localized: "remote.cloneDirectory.tooltip"))
             }
             .padding()
+            
+            // Clone status banner
+            if let error = cloneError {
+                HStack {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                    Text(error)
+                        .font(.caption)
+                    Spacer()
+                    Button(action: { cloneError = nil }) {
+                        Image(systemName: "xmark")
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(8)
+                .background(Color.orange.opacity(0.1))
+            }
+            
+            if showCloneSuccess, let path = lastClonedPath {
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text(String(format: String(localized: "remote.cloneSuccess"), (path as NSString).lastPathComponent))
+                        .font(.caption)
+                    Spacer()
+                    Button(String(localized: "remote.openInFinder")) {
+                        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: path)
+                    }
+                    .font(.caption)
+                    Button(action: { showCloneSuccess = false }) {
+                        Image(systemName: "xmark")
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(8)
+                .background(Color.green.opacity(0.1))
+            }
             
             Divider()
             
@@ -151,7 +208,9 @@ struct RemoteRepositoriesView: View {
             RemoteRepositoryRow(
                 repository: repo,
                 isLocallyAvailable: isLocallyAvailable(repo),
-                onOpenInBrowser: { openInBrowser(repo) }
+                isCloning: cloningRepoId == repo.id,
+                onOpenInBrowser: { openInBrowser(repo) },
+                onClone: { cloneRepository(repo) }
             )
         }
         .listStyle(.plain)
@@ -208,6 +267,61 @@ struct RemoteRepositoriesView: View {
             NSWorkspace.shared.open(url)
         }
     }
+    
+    private var cloneDirectoryDisplayName: String {
+        let path = (defaultCloneDirectory as NSString).expandingTildeInPath
+        return (path as NSString).lastPathComponent
+    }
+    
+    private func selectCloneDirectory() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.message = String(localized: "remote.cloneDirectory.select")
+        
+        // Start at current clone directory
+        let expandedPath = (defaultCloneDirectory as NSString).expandingTildeInPath
+        panel.directoryURL = URL(fileURLWithPath: expandedPath)
+        
+        if panel.runModal() == .OK, let url = panel.url {
+            defaultCloneDirectory = url.path
+        }
+    }
+    
+    private func cloneRepository(_ repo: GitHubRepository) {
+        guard cloningRepoId == nil else { return } // Already cloning
+        
+        cloningRepoId = repo.id
+        cloneError = nil
+        showCloneSuccess = false
+        
+        Task {
+            do {
+                let targetDir = (defaultCloneDirectory as NSString).expandingTildeInPath
+                let clonedPath = try await GitService.shared.cloneRepository(
+                    url: repo.cloneURL,
+                    to: targetDir
+                )
+                
+                // Add to tracked projects
+                _ = try? RepositoryDiscovery.shared.addRepository(at: clonedPath)
+                
+                await MainActor.run {
+                    self.cloningRepoId = nil
+                    self.lastClonedPath = clonedPath
+                    self.showCloneSuccess = true
+                    // Refresh local URLs to show new status
+                    self.loadLocalProjectURLs()
+                }
+            } catch {
+                await MainActor.run {
+                    self.cloningRepoId = nil
+                    self.cloneError = error.localizedDescription
+                }
+            }
+        }
+    }
 }
 
 // MARK: - Repository Row
@@ -215,7 +329,9 @@ struct RemoteRepositoriesView: View {
 private struct RemoteRepositoryRow: View {
     let repository: GitHubRepository
     let isLocallyAvailable: Bool
+    let isCloning: Bool
     let onOpenInBrowser: () -> Void
+    let onClone: () -> Void
     
     @State private var isHovered = false
     
@@ -284,6 +400,23 @@ private struct RemoteRepositoryRow: View {
             }
             
             Spacer()
+            
+            // Clone button (for non-local repos)
+            if !isLocallyAvailable {
+                if isCloning {
+                    ProgressView()
+                        .scaleEffect(0.6)
+                        .frame(width: 20, height: 20)
+                } else {
+                    Button(action: onClone) {
+                        Image(systemName: "arrow.down.circle")
+                            .foregroundColor(.accentColor)
+                    }
+                    .buttonStyle(.plain)
+                    .opacity(isHovered ? 1.0 : 0.3)
+                    .help(String(localized: "remote.clone"))
+                }
+            }
             
             // Open in browser button (visible on hover)
             Button(action: onOpenInBrowser) {

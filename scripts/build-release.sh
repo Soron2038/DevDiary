@@ -97,7 +97,9 @@ echo "💿 Creating DMG installer..."
 
 # Create temporary DMG directory
 DMG_TEMP="$DIST_DIR/dmg_temp"
+DMG_RW="$DIST_DIR/${APP_NAME}_rw.dmg"
 rm -rf "$DMG_TEMP"
+rm -f "$DMG_RW"
 mkdir -p "$DMG_TEMP"
 
 # Copy app to temp directory
@@ -106,14 +108,78 @@ cp -R "$APP_BUNDLE" "$DMG_TEMP/"
 # Create symbolic link to Applications
 ln -s /Applications "$DMG_TEMP/Applications"
 
-# Create DMG
+# Copy background image (hidden)
+BG_SOURCE="$PROJECT_DIR/Resources/dmg-background.png"
+if [ -f "$BG_SOURCE" ]; then
+    mkdir -p "$DMG_TEMP/.background"
+    cp "$BG_SOURCE" "$DMG_TEMP/.background/background.png"
+    echo "   ✓ Background image added"
+fi
+
+# Create read-write DMG first (needed for customization)
 hdiutil create -volname "$APP_NAME" \
     -srcfolder "$DMG_TEMP" \
-    -ov -format UDZO \
-    "$DIST_DIR/$DMG_NAME"
+    -ov -format UDRW \
+    "$DMG_RW"
+
+# Mount the DMG
+MOUNT_DIR="/Volumes/$APP_NAME"
+
+# Detach if already mounted
+hdiutil detach "$MOUNT_DIR" 2>/dev/null || true
+
+hdiutil attach "$DMG_RW" -mountpoint "$MOUNT_DIR" -nobrowse
+
+# Wait for mount
+sleep 1
+
+# Set volume icon if available
+if [ -f "$APP_BUNDLE/Contents/Resources/AppIcon.icns" ]; then
+    cp "$APP_BUNDLE/Contents/Resources/AppIcon.icns" "$MOUNT_DIR/.VolumeIcon.icns"
+    SetFile -c icnC "$MOUNT_DIR/.VolumeIcon.icns" 2>/dev/null || true
+fi
+
+# Use AppleScript to set window properties and icon positions
+echo "   Configuring DMG layout..."
+osascript <<EOF || echo "   ⚠ AppleScript layout failed (non-critical)"
+tell application "Finder"
+    tell disk "$APP_NAME"
+        open
+        delay 1
+        set current view of container window to icon view
+        set toolbar visible of container window to false
+        set statusbar visible of container window to false
+        set bounds of container window to {100, 100, 540, 380}
+        set viewOptions to icon view options of container window
+        set arrangement of viewOptions to not arranged
+        set icon size of viewOptions to 80
+        try
+            set background picture of viewOptions to file ".background:background.png"
+        end try
+        try
+            set position of item "$APP_NAME.app" of container window to {120, 140}
+            set position of item "Applications" of container window to {320, 140}
+        end try
+        update without registering applications
+        delay 1
+        close
+    end tell
+end tell
+EOF
+
+# Sync filesystem
+sync
+sleep 1
+
+# Unmount
+hdiutil detach "$MOUNT_DIR" -force
+
+# Convert to compressed read-only DMG
+hdiutil convert "$DMG_RW" -format UDZO -o "$DIST_DIR/$DMG_NAME" -ov
 
 # Cleanup
 rm -rf "$DMG_TEMP"
+rm -f "$DMG_RW"
 
 echo ""
 echo "✅ Build complete!"

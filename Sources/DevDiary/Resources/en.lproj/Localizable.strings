@@ -205,3 +205,8 @@
 "remote.localAvailable" = "Available locally";
 "remote.notLocal" = "Not local";
 "remote.openInBrowser" = "Open on GitHub";
+"remote.clone" = "Clone";
+"remote.cloneSuccess" = "%@ cloned and added";
+"remote.openInFinder" = "Open in Finder";
+"remote.cloneDirectory.tooltip" = "Target directory for cloned repositories";
+"remote.cloneDirectory.select" = "Select directory for cloned repositories";

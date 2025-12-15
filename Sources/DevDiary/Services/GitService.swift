@@ -197,6 +197,89 @@ final class GitService {
         return remoteURL.contains("github.com")
     }
     
+    // MARK: - Clone
+    
+    /// Clone a repository to a target directory
+    /// - Parameters:
+    ///   - url: The clone URL (HTTPS or SSH)
+    ///   - targetDirectory: The parent directory where the repo will be cloned
+    ///   - name: Optional custom name for the cloned folder (defaults to repo name)
+    /// - Returns: The full path to the cloned repository
+    func cloneRepository(url: String, to targetDirectory: String, name: String? = nil) async throws -> String {
+        // Determine the folder name from URL if not provided
+        let folderName: String
+        if let customName = name, !customName.isEmpty {
+            folderName = customName
+        } else {
+            // Extract repo name from URL: https://github.com/user/repo.git -> repo
+            var repoName = URL(string: url)?.lastPathComponent ?? "repository"
+            if repoName.hasSuffix(".git") {
+                repoName = String(repoName.dropLast(4))
+            }
+            folderName = repoName
+        }
+        
+        let targetPath = (targetDirectory as NSString).appendingPathComponent(folderName)
+        
+        // Check if target already exists
+        if FileManager.default.fileExists(atPath: targetPath) {
+            throw CloneError.targetExists(targetPath)
+        }
+        
+        // Ensure parent directory exists
+        try FileManager.default.createDirectory(atPath: targetDirectory, withIntermediateDirectories: true)
+        
+        // Run git clone
+        let result = await runGitClone(url: url, targetPath: targetPath)
+        
+        if result.success {
+            return targetPath
+        } else {
+            throw CloneError.cloneFailed(result.output)
+        }
+    }
+    
+    enum CloneError: LocalizedError {
+        case targetExists(String)
+        case cloneFailed(String)
+        
+        var errorDescription: String? {
+            switch self {
+            case .targetExists(let path):
+                return "Target folder already exists: \(path)"
+            case .cloneFailed(let output):
+                return "Clone failed: \(output)"
+            }
+        }
+    }
+    
+    private func runGitClone(url: String, targetPath: String) async -> (success: Bool, output: String) {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let process = Process()
+                let pipe = Pipe()
+                
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+                process.arguments = ["clone", url, targetPath]
+                process.standardOutput = pipe
+                process.standardError = pipe
+                
+                do {
+                    try process.run()
+                    process.waitUntilExit()
+                    
+                    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                    let output = String(data: data, encoding: .utf8) ?? ""
+                    let success = process.terminationStatus == 0
+                    
+                    continuation.resume(returning: (success, output))
+                } catch {
+                    continuation.resume(returning: (false, error.localizedDescription))
+                }
+            }
+        }
+    }
+    
     // MARK: - Private
     
     private func parseCommits(_ output: String) -> [GitCommit] {
