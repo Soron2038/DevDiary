@@ -10,6 +10,7 @@ struct RemoteRepositoriesView: View {
     @State private var searchText = ""
     @State private var showArchived = false
     @State private var showForks = true
+    @State private var isConnected = false
     
     // Clone state
     @AppStorage("defaultCloneDirectory") private var defaultCloneDirectory = "~/Developer"
@@ -122,7 +123,7 @@ struct RemoteRepositoriesView: View {
             Divider()
             
             // Content
-            if !GitHubService.shared.isConnected {
+            if !isConnected {
                 notConnectedView
             } else if isLoading {
                 loadingView
@@ -135,10 +136,21 @@ struct RemoteRepositoriesView: View {
             }
         }
         .onAppear {
-            loadLocalProjectURLs()
-            if GitHubService.shared.isConnected {
-                loadRepositories()
-            }
+            checkConnectionAndLoad()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            checkConnectionAndLoad()
+        }
+    }
+    
+    private func checkConnectionAndLoad() {
+        loadLocalProjectURLs()
+        let connected = GitHubService.shared.isConnected
+        if connected != isConnected {
+            isConnected = connected
+        }
+        if connected && repositories.isEmpty {
+            loadRepositories()
         }
     }
     

@@ -9,13 +9,33 @@ struct GitHubView: View {
     @State private var isLoadingIssues = true
     @State private var errorMessage: String?
     @State private var isConnected = false
+    @State private var showTokenExpiredAlert = false
     
     var body: some View {
-        Group {
-            if !isConnected {
-                notConnectedView
-            } else {
-                contentView
+        VStack(spacing: 0) {
+            // Error banner
+            if let error = errorMessage {
+                HStack {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                    Text(error)
+                        .font(.caption)
+                    Spacer()
+                    Button(action: { errorMessage = nil }) {
+                        Image(systemName: "xmark")
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(8)
+                .background(Color.orange.opacity(0.1))
+            }
+            
+            Group {
+                if !isConnected {
+                    notConnectedView
+                } else {
+                    contentView
+                }
             }
         }
         .onAppear {
@@ -24,6 +44,17 @@ struct GitHubView: View {
         // Re-check when window becomes active (e.g., after connecting in Settings)
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             checkConnectionAndLoad()
+        }
+        .alert(String(localized: "github.tokenExpired.title"), isPresented: $showTokenExpiredAlert) {
+            Button(String(localized: "button.ok")) {
+                // Disconnect and reset state
+                try? GitHubService.shared.disconnect()
+                isConnected = false
+                pullRequests = []
+                issues = []
+            }
+        } message: {
+            Text(String(localized: "github.tokenExpired.message"))
         }
     }
     
@@ -180,6 +211,7 @@ struct GitHubView: View {
     
     private func loadPullRequests() {
         isLoadingPRs = true
+        errorMessage = nil
         Task {
             do {
                 let prs = try await GitHubService.shared.fetchUserPullRequests()
@@ -189,8 +221,8 @@ struct GitHubView: View {
                 }
             } catch {
                 await MainActor.run {
-                    self.errorMessage = error.localizedDescription
                     self.isLoadingPRs = false
+                    handleError(error)
                 }
             }
         }
@@ -207,10 +239,23 @@ struct GitHubView: View {
                 }
             } catch {
                 await MainActor.run {
-                    self.errorMessage = error.localizedDescription
                     self.isLoadingIssues = false
+                    handleError(error)
                 }
             }
+        }
+    }
+    
+    private func handleError(_ error: Error) {
+        let message = error.localizedDescription
+        
+        // Check for token expiration (401 errors)
+        if message.contains("401") || message.lowercased().contains("expired") || message.lowercased().contains("invalid") {
+            showTokenExpiredAlert = true
+        } else if message.contains("offline") || message.contains("network") || message.contains("internet") {
+            errorMessage = String(localized: "github.error.offline")
+        } else {
+            errorMessage = message
         }
     }
 }

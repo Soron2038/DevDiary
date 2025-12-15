@@ -239,3 +239,9 @@
 "github.openInBrowser" = "Auf GitHub öffnen";
 "github.notConnected" = "Nicht mit GitHub verbunden";
 "github.notConnected.hint" = "Verbinde dein GitHub-Konto in den Einstellungen.";
+"github.tokenExpired.title" = "GitHub-Sitzung abgelaufen";
+"github.tokenExpired.message" = "Deine GitHub-Verbindung ist nicht mehr gültig. Bitte verbinde dich erneut in den Einstellungen.";
+"github.error.offline" = "Keine Internetverbindung. Bitte prüfe deine Netzwerkverbindung.";
+
+/* Buttons */
+"button.ok" = "OK";

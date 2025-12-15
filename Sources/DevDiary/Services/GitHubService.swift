@@ -422,8 +422,35 @@ final class GitHubService {
         // Get current username first
         let username = try await fetchCurrentUserLogin()
         
-        // Search for PRs authored by user OR where review is requested
-        let query = "is:pr is:open author:\(username) OR is:pr is:open review-requested:\(username)"
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        var allPRs: [GitHubPullRequest] = []
+        var seenIds = Set<Int>()
+        
+        // Search for PRs authored by user
+        let authorQuery = "is:pr is:open author:\(username)"
+        if let authorPRs = try? await searchPullRequests(query: authorQuery, token: token, decoder: decoder) {
+            for pr in authorPRs where !seenIds.contains(pr.id) {
+                allPRs.append(pr)
+                seenIds.insert(pr.id)
+            }
+        }
+        
+        // Search for PRs where review is requested
+        let reviewQuery = "is:pr is:open review-requested:\(username)"
+        if let reviewPRs = try? await searchPullRequests(query: reviewQuery, token: token, decoder: decoder) {
+            for pr in reviewPRs where !seenIds.contains(pr.id) {
+                allPRs.append(pr)
+                seenIds.insert(pr.id)
+            }
+        }
+        
+        // Sort by updated date
+        return allPRs.sorted { $0.updatedAt > $1.updatedAt }
+    }
+    
+    private func searchPullRequests(query: String, token: String, decoder: JSONDecoder) async throws -> [GitHubPullRequest] {
         let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
         
         guard let url = URL(string: "https://api.github.com/search/issues?q=\(encodedQuery)&sort=updated&order=desc&per_page=50") else {
@@ -444,9 +471,6 @@ final class GitHubService {
             logger.error("Fetch PRs failed: \(text)")
             throw AuthError.unknown("GitHub API error (\(http.statusCode))")
         }
-        
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
         
         let response = try decoder.decode(GitHubSearchResponse<GitHubPullRequest>.self, from: data)
         return response.items

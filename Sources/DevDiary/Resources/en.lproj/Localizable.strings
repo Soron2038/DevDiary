@@ -239,3 +239,9 @@
 "github.openInBrowser" = "Open on GitHub";
 "github.notConnected" = "Not connected to GitHub";
 "github.notConnected.hint" = "Connect your GitHub account in Settings.";
+"github.tokenExpired.title" = "GitHub Session Expired";
+"github.tokenExpired.message" = "Your GitHub connection is no longer valid. Please reconnect in Settings.";
+"github.error.offline" = "No internet connection. Please check your network.";
+
+/* Buttons */
+"button.ok" = "OK";
