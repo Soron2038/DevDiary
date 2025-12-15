@@ -210,3 +210,18 @@
 "remote.openInFinder" = "Im Finder öffnen";
 "remote.cloneDirectory.tooltip" = "Zielverzeichnis für geklonte Repositories";
 "remote.cloneDirectory.select" = "Verzeichnis für geklonte Repositories wählen";
+
+/* Workflow Status */
+"workflow.status.success" = "Build erfolgreich";
+"workflow.status.failure" = "Build fehlgeschlagen";
+"workflow.status.pending" = "Build läuft...";
+"workflow.status.cancelled" = "Build abgebrochen";
+"workflow.status.skipped" = "Build übersprungen";
+"workflow.status.unknown" = "Build-Status unbekannt";
+"workflow.status.noWorkflows" = "Keine Workflows";
+
+/* Ahead/Behind Status */
+"git.status.upToDate" = "Aktuell";
+"git.status.ahead" = "%d zum Pushen";
+"git.status.behind" = "%d zum Pullen";
+"git.status.diverged" = "Divergiert";

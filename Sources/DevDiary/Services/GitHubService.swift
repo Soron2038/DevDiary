@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import SwiftUI
 import os.log
 
 /// GitHub integration using OAuth 2.0 Device Authorization Grant (Device Flow)
@@ -277,6 +278,139 @@ final class GitHubService {
     func openInBrowser(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }
         NSWorkspace.shared.open(url)
+    }
+    
+    // MARK: - Workflow Status
+    
+    /// Status of the latest GitHub Actions workflow run
+    enum WorkflowRunStatus: String {
+        case success
+        case failure
+        case pending      // queued, in_progress, waiting
+        case cancelled
+        case skipped
+        case unknown
+        case noWorkflows  // Repository has no workflows
+        
+        var color: Color {
+            switch self {
+            case .success: return .green
+            case .failure: return .red
+            case .pending: return .orange
+            case .cancelled, .skipped: return .gray
+            case .unknown, .noWorkflows: return .secondary
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .success: return "checkmark.circle.fill"
+            case .failure: return "xmark.circle.fill"
+            case .pending: return "clock.fill"
+            case .cancelled: return "nosign"
+            case .skipped: return "arrow.right.circle"
+            case .unknown: return "questionmark.circle"
+            case .noWorkflows: return "minus.circle"
+            }
+        }
+        
+        var localizationKey: String {
+            "workflow.status.\(rawValue)"
+        }
+    }
+    
+    /// Fetch the status of the latest workflow run for a repository
+    func fetchLatestWorkflowStatus(owner: String, repo: String) async throws -> WorkflowRunStatus {
+        guard let token = currentAccessToken() else { throw AuthError.unknown("Not connected to GitHub") }
+        
+        guard let url = URL(string: "https://api.github.com/repos/\(owner)/\(repo)/actions/runs?per_page=1") else {
+            throw AuthError.invalidURL
+        }
+        
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard let http = resp as? HTTPURLResponse else {
+            throw AuthError.unknown("No HTTP response")
+        }
+        
+        // 404 means repo might not have actions enabled or doesn't exist
+        if http.statusCode == 404 {
+            return .noWorkflows
+        }
+        
+        guard http.statusCode == 200 else {
+            return .unknown
+        }
+        
+        // Parse response
+        struct WorkflowRunsResponse: Decodable {
+            let total_count: Int
+            let workflow_runs: [WorkflowRun]
+        }
+        
+        struct WorkflowRun: Decodable {
+            let status: String       // queued, in_progress, completed, etc.
+            let conclusion: String?  // success, failure, cancelled, skipped, etc. (only when completed)
+        }
+        
+        let response = try JSONDecoder().decode(WorkflowRunsResponse.self, from: data)
+        
+        if response.workflow_runs.isEmpty {
+            return .noWorkflows
+        }
+        
+        let run = response.workflow_runs[0]
+        
+        // If not completed, it's pending
+        if run.status != "completed" {
+            return .pending
+        }
+        
+        // Map conclusion to status
+        switch run.conclusion?.lowercased() {
+        case "success":
+            return .success
+        case "failure", "timed_out":
+            return .failure
+        case "cancelled":
+            return .cancelled
+        case "skipped":
+            return .skipped
+        default:
+            return .unknown
+        }
+    }
+    
+    /// Fetch workflow statuses for multiple repositories in parallel
+    func fetchWorkflowStatuses(for repositories: [GitHubRepository]) async -> [Int: WorkflowRunStatus] {
+        var statuses: [Int: WorkflowRunStatus] = [:]
+        
+        await withTaskGroup(of: (Int, WorkflowRunStatus).self) { group in
+            for repo in repositories {
+                group.addTask {
+                    let parts = repo.fullName.split(separator: "/")
+                    guard parts.count == 2 else { return (repo.id, .unknown) }
+                    let owner = String(parts[0])
+                    let repoName = String(parts[1])
+                    
+                    do {
+                        let status = try await self.fetchLatestWorkflowStatus(owner: owner, repo: repoName)
+                        return (repo.id, status)
+                    } catch {
+                        return (repo.id, .unknown)
+                    }
+                }
+            }
+            
+            for await (repoId, status) in group {
+                statuses[repoId] = status
+            }
+        }
+        
+        return statuses
     }
     
     // MARK: - Repository API

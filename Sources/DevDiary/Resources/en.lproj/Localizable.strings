@@ -210,3 +210,18 @@
 "remote.openInFinder" = "Open in Finder";
 "remote.cloneDirectory.tooltip" = "Target directory for cloned repositories";
 "remote.cloneDirectory.select" = "Select directory for cloned repositories";
+
+/* Workflow Status */
+"workflow.status.success" = "Build succeeded";
+"workflow.status.failure" = "Build failed";
+"workflow.status.pending" = "Build in progress...";
+"workflow.status.cancelled" = "Build cancelled";
+"workflow.status.skipped" = "Build skipped";
+"workflow.status.unknown" = "Build status unknown";
+"workflow.status.noWorkflows" = "No workflows";
+
+/* Ahead/Behind Status */
+"git.status.upToDate" = "Up to date";
+"git.status.ahead" = "%d to push";
+"git.status.behind" = "%d to pull";
+"git.status.diverged" = "Diverged";

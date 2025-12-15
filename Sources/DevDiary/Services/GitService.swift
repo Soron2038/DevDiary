@@ -197,6 +197,111 @@ final class GitService {
         return remoteURL.contains("github.com")
     }
     
+    // MARK: - Repository Status
+    
+    /// Combined status for a repository
+    struct RepositoryStatus {
+        let modifiedFiles: Int      // Uncommitted changes (modified, added, deleted)
+        let stagedFiles: Int        // Files staged for commit
+        let untrackedFiles: Int     // New untracked files
+        let ahead: Int              // Commits ahead of remote
+        let behind: Int             // Commits behind remote
+        
+        var hasUncommittedChanges: Bool {
+            modifiedFiles > 0 || stagedFiles > 0
+        }
+        
+        var hasRemoteChanges: Bool {
+            ahead > 0 || behind > 0
+        }
+        
+        var totalChanges: Int {
+            modifiedFiles + stagedFiles
+        }
+        
+        /// Display string for the status badge
+        var displayString: String {
+            var parts: [String] = []
+            
+            // Uncommitted changes (most important)
+            if hasUncommittedChanges {
+                parts.append("\(totalChanges) ×") // × for modified
+            }
+            
+            // Remote status
+            if ahead > 0 { parts.append("↑\(ahead)") }
+            if behind > 0 { parts.append("↓\(behind)") }
+            
+            return parts.joined(separator: " ")
+        }
+        
+        var isEmpty: Bool {
+            !hasUncommittedChanges && !hasRemoteChanges
+        }
+    }
+    
+    /// Get comprehensive repository status including uncommitted changes and remote status
+    func getRepositoryStatus(at path: String) -> RepositoryStatus {
+        var modified = 0
+        var staged = 0
+        var untracked = 0
+        var ahead = 0
+        var behind = 0
+        
+        // Get working directory status
+        let statusResult = runGitCommand(["status", "--porcelain"], in: path)
+        if statusResult.success {
+            let lines = statusResult.output.components(separatedBy: .newlines)
+            for line in lines where !line.isEmpty {
+                guard line.count >= 2 else { continue }
+                let index = line.index(line.startIndex, offsetBy: 0)
+                let workTree = line.index(line.startIndex, offsetBy: 1)
+                let indexStatus = line[index]
+                let workTreeStatus = line[workTree]
+                
+                // Untracked
+                if indexStatus == "?" {
+                    untracked += 1
+                    continue
+                }
+                
+                // Staged changes (index)
+                if indexStatus != " " && indexStatus != "?" {
+                    staged += 1
+                }
+                
+                // Unstaged changes (work tree)
+                if workTreeStatus != " " && workTreeStatus != "?" {
+                    modified += 1
+                }
+            }
+        }
+        
+        // Get ahead/behind status
+        let revListResult = runGitCommand(["rev-list", "--left-right", "--count", "@{upstream}...HEAD"], in: path)
+        if revListResult.success {
+            let output = revListResult.output.trimmingCharacters(in: .whitespacesAndNewlines)
+            let parts = output.split(separator: "\t")
+            if parts.count == 2 {
+                behind = Int(parts[0]) ?? 0
+                ahead = Int(parts[1]) ?? 0
+            }
+        }
+        
+        return RepositoryStatus(
+            modifiedFiles: modified,
+            stagedFiles: staged,
+            untrackedFiles: untracked,
+            ahead: ahead,
+            behind: behind
+        )
+    }
+    
+    /// Fetch from remote to update refs
+    func fetchRemote(at path: String, remote: String = "origin") {
+        _ = runGitCommand(["fetch", remote, "--quiet"], in: path)
+    }
+    
     // MARK: - Clone
     
     /// Clone a repository to a target directory

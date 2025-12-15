@@ -39,6 +39,7 @@ struct ProjectsView: View {
 struct LocalProjectsView: View {
     @State private var projects: [Project] = []
     @State private var projectStats: [UUID: StatisticsService.ProjectStatistics] = [:]
+    @State private var repoStatuses: [UUID: GitService.RepositoryStatus] = [:]
     @State private var selectedProject: Project?
     @State private var isLoading = true
     @State private var showingAddSheet = false
@@ -106,6 +107,7 @@ struct LocalProjectsView: View {
                         ProjectRow(
                             project: project,
                             stats: projectStats[project.id],
+                            repoStatus: repoStatuses[project.id],
                             onToggleTracking: { toggleTracking(project) },
                             onRemove: {
                                 projectToRemove = project
@@ -174,13 +176,37 @@ struct LocalProjectsView: View {
             }
             
             isLoading = false
+            
+            // Load repository statuses in background
+            loadRepoStatuses()
         } catch {
             isLoading = false
         }
     }
     
     private func refreshProjects() {
-        loadProjects()
+        // Fetch from remotes first for accurate status
+        Task {
+            for project in projects {
+                GitService.shared.fetchRemote(at: project.path)
+            }
+            await MainActor.run {
+                loadProjects()
+            }
+        }
+    }
+    
+    private func loadRepoStatuses() {
+        Task {
+            var statuses: [UUID: GitService.RepositoryStatus] = [:]
+            for project in projects {
+                let status = GitService.shared.getRepositoryStatus(at: project.path)
+                statuses[project.id] = status
+            }
+            await MainActor.run {
+                self.repoStatuses = statuses
+            }
+        }
     }
     
     private func discoverRepositories() {
@@ -235,6 +261,7 @@ struct LocalProjectsView: View {
 private struct ProjectRow: View {
     let project: Project
     let stats: StatisticsService.ProjectStatistics?
+    let repoStatus: GitService.RepositoryStatus?
     let onToggleTracking: () -> Void
     let onRemove: () -> Void
     
@@ -248,9 +275,23 @@ private struct ProjectRow: View {
             .buttonStyle(.plain)
             
             VStack(alignment: .leading, spacing: 2) {
-                Text(project.name)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                HStack(spacing: 6) {
+                    Text(project.name)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    // Repository status badge
+                    if let status = repoStatus, !status.isEmpty {
+                        Text(status.displayString)
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .background(statusBackgroundColor(status))
+                            .foregroundColor(statusForegroundColor(status))
+                            .cornerRadius(4)
+                    }
+                }
                 
                 if let stats = stats, stats.commitCount > 0 {
                     Text("\(stats.commitCount) commits • \(stats.formattedDuration)")
@@ -274,6 +315,28 @@ private struct ProjectRow: View {
                 Label(String(localized: "projects.remove"), systemImage: "trash")
             }
         }
+    }
+    
+    private func statusBackgroundColor(_ status: GitService.RepositoryStatus) -> Color {
+        if status.hasUncommittedChanges {
+            return Color.orange.opacity(0.2)  // Uncommitted changes
+        } else if status.behind > 0 {
+            return Color.blue.opacity(0.2)    // Behind: needs pull
+        } else if status.ahead > 0 {
+            return Color.green.opacity(0.2)   // Ahead: needs push
+        }
+        return Color.secondary.opacity(0.2)
+    }
+    
+    private func statusForegroundColor(_ status: GitService.RepositoryStatus) -> Color {
+        if status.hasUncommittedChanges {
+            return .orange
+        } else if status.behind > 0 {
+            return .blue
+        } else if status.ahead > 0 {
+            return .green
+        }
+        return .secondary
     }
 }
 

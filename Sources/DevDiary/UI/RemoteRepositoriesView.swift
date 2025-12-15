@@ -18,6 +18,10 @@ struct RemoteRepositoriesView: View {
     @State private var showCloneSuccess = false
     @State private var lastClonedPath: String?
     
+    // CI status
+    @State private var workflowStatuses: [Int: GitHubService.WorkflowRunStatus] = [:]
+    @State private var isLoadingStatuses = false
+    
     private var filteredRepositories: [GitHubRepository] {
         if searchText.isEmpty {
             return repositories
@@ -209,8 +213,10 @@ struct RemoteRepositoriesView: View {
                 repository: repo,
                 isLocallyAvailable: isLocallyAvailable(repo),
                 isCloning: cloningRepoId == repo.id,
+                workflowStatus: workflowStatuses[repo.id],
                 onOpenInBrowser: { openInBrowser(repo) },
-                onClone: { cloneRepository(repo) }
+                onClone: { cloneRepository(repo) },
+                onOpenActions: { openActionsPage(repo) }
             )
         }
         .listStyle(.plain)
@@ -232,6 +238,8 @@ struct RemoteRepositoriesView: View {
                     self.repositories = repos
                     self.isLoading = false
                 }
+                // Load workflow statuses in background
+                await loadWorkflowStatuses(for: repos)
             } catch {
                 await MainActor.run {
                     self.errorMessage = error.localizedDescription
@@ -265,6 +273,25 @@ struct RemoteRepositoriesView: View {
     private func openInBrowser(_ repo: GitHubRepository) {
         if let url = URL(string: repo.htmlURL) {
             NSWorkspace.shared.open(url)
+        }
+    }
+    
+    private func openActionsPage(_ repo: GitHubRepository) {
+        if let url = URL(string: "\(repo.htmlURL)/actions") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+    
+    private func loadWorkflowStatuses(for repos: [GitHubRepository]) async {
+        await MainActor.run {
+            isLoadingStatuses = true
+        }
+        
+        let statuses = await GitHubService.shared.fetchWorkflowStatuses(for: repos)
+        
+        await MainActor.run {
+            self.workflowStatuses = statuses
+            self.isLoadingStatuses = false
         }
     }
     
@@ -330,8 +357,10 @@ private struct RemoteRepositoryRow: View {
     let repository: GitHubRepository
     let isLocallyAvailable: Bool
     let isCloning: Bool
+    let workflowStatus: GitHubService.WorkflowRunStatus?
     let onOpenInBrowser: () -> Void
     let onClone: () -> Void
+    let onOpenActions: () -> Void
     
     @State private var isHovered = false
     
@@ -347,6 +376,24 @@ private struct RemoteRepositoryRow: View {
                     Text(repository.name)
                         .font(.subheadline)
                         .fontWeight(.medium)
+                    
+                    // CI Status badge
+                    if let status = workflowStatus {
+                        if status != .noWorkflows && status != .unknown {
+                            Button(action: onOpenActions) {
+                                Image(systemName: status.icon)
+                                    .font(.caption)
+                                    .foregroundColor(status.color)
+                            }
+                            .buttonStyle(.plain)
+                            .help(String(localized: String.LocalizationValue(status.localizationKey)))
+                        }
+                    } else {
+                        // Loading indicator while fetching status
+                        ProgressView()
+                            .scaleEffect(0.5)
+                            .frame(width: 12, height: 12)
+                    }
                     
                     if repository.isArchived {
                         Text("archived")
