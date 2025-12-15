@@ -8,11 +8,24 @@ DevDiary is a native macOS menubar app that automatically tracks your daily deve
 
 ## Features
 
+### Core
 - 🕐 **Automatic Time Tracking** - Sessions are detected based on Git commit activity
 - 📝 **Git-based Activity** - Tracks commits, additions, deletions across all your repositories
 - 🔒 **100% Local & Private** - All data stays on your Mac, no cloud, no telemetry
 - 🌍 **Localized** - Available in English and German
 - 📊 **Daily Statistics** - See your work time, commits, and code changes at a glance
+
+### Local Repositories
+- 📁 **Auto-Discovery** - Automatically finds Git repositories in common developer folders
+- 🏷️ **Repository Status** - Shows uncommitted changes, ahead/behind indicators
+- 🔄 **Quick Actions** - Open in Finder, Terminal, or your favorite IDE
+
+### GitHub Integration (Optional)
+- 🔗 **Connect with GitHub** - Secure OAuth Device Flow authentication
+- ☁️ **Remote Repositories** - Browse and clone your GitHub repos directly
+- 📋 **Pull Requests** - View your open PRs and review requests at a glance
+- 🐛 **Issues** - See issues assigned to you with labels and status
+- 🔐 **Privacy-Respecting** - Token stored securely in macOS Keychain, connection is optional
 
 ## Installation
 
@@ -43,6 +56,14 @@ After the first launch, the app will open normally.
 3. **Dashboard**: Click "Dashboard" to see detailed statistics, history, and manage projects
 4. **Settings**: Configure polling interval, session timeout, and data retention
 
+### Dashboard Tabs
+
+- **Today** - Current session overview with recent commits and statistics
+- **History** - Browse past sessions by date with detailed activity logs
+- **Projects** - Manage local Git repositories with status indicators
+- **GitHub** - View your pull requests and assigned issues (requires GitHub connection)
+- **Settings** - Configure app behavior and GitHub integration
+
 ### Tracked Folders
 
 DevDiary automatically searches for Git repositories in:
@@ -50,8 +71,17 @@ DevDiary automatically searches for Git repositories in:
 - `~/Projects`
 - `~/Code`
 - `~/Documents`
+- `~/Library/Mobile Documents/com~apple~CloudDocs` (iCloud Drive)
 
 You can manually add additional repositories in the Projects view.
+
+### GitHub Connection
+
+To use GitHub features:
+1. Go to **Settings → GitHub**
+2. Click "Connect with GitHub"
+3. Copy the displayed code and enter it on GitHub when prompted
+4. After authorization, your PRs and issues will appear in the GitHub tab
 
 ## Requirements
 
@@ -80,10 +110,11 @@ swift run DevDiary
 DevDiary is designed with privacy as a core principle:
 
 - **Local Only**: All data is stored locally in `~/Library/Application Support/DevDiary/`
-- **No Network**: The app never connects to the internet
+- **Minimal Network**: Only connects to GitHub API if you explicitly enable GitHub integration
 - **No Telemetry**: No usage data is collected or transmitted
 - **Your Control**: You can exclude repositories and delete your data anytime
 - **Configurable Retention**: Set how long data is kept (default: 90 days)
+- **Secure Token Storage**: GitHub tokens are stored in the macOS Keychain, not in plain text
 
 ## License
 
