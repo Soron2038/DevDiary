@@ -413,6 +413,82 @@ final class GitHubService {
         return statuses
     }
     
+    // MARK: - Pull Requests API
+    
+    /// Fetch open pull requests for the current user (authored or review requested)
+    func fetchUserPullRequests() async throws -> [GitHubPullRequest] {
+        guard let token = currentAccessToken() else { throw AuthError.unknown("Not connected to GitHub") }
+        
+        // Get current username first
+        let username = try await fetchCurrentUserLogin()
+        
+        // Search for PRs authored by user OR where review is requested
+        let query = "is:pr is:open author:\(username) OR is:pr is:open review-requested:\(username)"
+        let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+        
+        guard let url = URL(string: "https://api.github.com/search/issues?q=\(encodedQuery)&sort=updated&order=desc&per_page=50") else {
+            throw AuthError.invalidURL
+        }
+        
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard let http = resp as? HTTPURLResponse else {
+            throw AuthError.unknown("No HTTP response")
+        }
+        
+        guard http.statusCode == 200 else {
+            let text = String(data: data, encoding: .utf8) ?? "<no body>"
+            logger.error("Fetch PRs failed: \(text)")
+            throw AuthError.unknown("GitHub API error (\(http.statusCode))")
+        }
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        let response = try decoder.decode(GitHubSearchResponse<GitHubPullRequest>.self, from: data)
+        return response.items
+    }
+    
+    // MARK: - Issues API
+    
+    /// Fetch issues assigned to the current user
+    func fetchAssignedIssues() async throws -> [GitHubIssue] {
+        guard let token = currentAccessToken() else { throw AuthError.unknown("Not connected to GitHub") }
+        
+        guard let url = URL(string: "https://api.github.com/issues?filter=assigned&state=open&sort=updated&direction=desc&per_page=50") else {
+            throw AuthError.invalidURL
+        }
+        
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard let http = resp as? HTTPURLResponse else {
+            throw AuthError.unknown("No HTTP response")
+        }
+        
+        guard http.statusCode == 200 else {
+            let text = String(data: data, encoding: .utf8) ?? "<no body>"
+            logger.error("Fetch issues failed: \(text)")
+            throw AuthError.unknown("GitHub API error (\(http.statusCode))")
+        }
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        // Filter out pull requests (GitHub returns PRs as issues too)
+        let allIssues = try decoder.decode([GitHubIssue].self, from: data)
+        return allIssues.filter { issue in
+            // PRs have a pull_request key, but our model doesn't include it
+            // We check the HTML URL instead - PRs have /pull/ in the URL
+            !issue.htmlURL.contains("/pull/")
+        }
+    }
+    
     // MARK: - Repository API
     
     /// Fetch all repositories for the authenticated user

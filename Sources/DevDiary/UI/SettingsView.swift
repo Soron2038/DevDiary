@@ -401,8 +401,18 @@ struct SettingsView: View {
                 })
                 .frame(width: 420, height: 240)
             } else {
-                ProgressView()
-                    .frame(width: 320, height: 160)
+                VStack(spacing: 16) {
+                    ProgressView()
+                    Text("Verbinde mit GitHub...")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Button("Abbrechen") {
+                        pollingTask?.cancel()
+                        showingGitHubAuth = false
+                    }
+                    .buttonStyle(.plain)
+                }
+                .frame(width: 320, height: 180)
             }
         }
     }
@@ -410,21 +420,23 @@ struct SettingsView: View {
     private func startGitHubDeviceFlow() async {
         FileLogger.shared.log("startGitHubDeviceFlow called")
         authErrorMessage = nil
+        deviceCode = nil
+        
         // Ensure client id is configured
         guard GitHubService.shared.clientId != nil else {
             FileLogger.shared.log("No client ID - showing setup sheet")
             showingGitHubSetup = true
             return
         }
+        
+        // Show loading sheet immediately
+        showingGitHubAuth = true
+        
         do {
             FileLogger.shared.log("Calling beginDeviceFlow...")
             let device = try await GitHubService.shared.beginDeviceFlow()
             FileLogger.shared.log("Got device code: \(device.user_code)")
             self.deviceCode = device
-            FileLogger.shared.log("Setting showingGitHubAuth = true")
-            showingGitHubAuth = true
-
-            // Do NOT auto-open browser – let user see the code first and click "Open in Browser"
 
             // Start polling
             FileLogger.shared.log("Starting polling task")
@@ -459,6 +471,7 @@ struct SettingsView: View {
             }
         } catch {
             FileLogger.shared.log("beginDeviceFlow threw: \(error)")
+            showingGitHubAuth = false
             authErrorMessage = error.localizedDescription
             showBanner(error.localizedDescription, kind: .error)
         }
@@ -568,6 +581,8 @@ private struct GitHubDeviceAuthSheet: View {
     let device: GitHubService.DeviceCode
     let onOpen: () -> Void
     let onCancel: () -> Void
+    
+    @State private var copied = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -577,12 +592,20 @@ private struct GitHubDeviceAuthSheet: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
 
-            HStack {
+            HStack(spacing: 12) {
                 Text(device.user_code)
-                    .font(.title2)
-                    .fontWeight(.semibold)
+                    .font(.system(size: 28, weight: .bold, design: .monospaced))
                     .textSelection(.enabled)
+                
+                Button(action: copyCode) {
+                    Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                        .foregroundColor(copied ? .green : .accentColor)
+                }
+                .buttonStyle(.plain)
+                .help(String(localized: "github.auth.copyCode"))
+                
                 Spacer()
+                
                 Button(String(localized: "github.auth.openInBrowser")) {
                     onOpen()
                 }
@@ -597,6 +620,21 @@ private struct GitHubDeviceAuthSheet: View {
             }
         }
         .padding()
+    }
+    
+    private func copyCode() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(device.user_code, forType: .string)
+        withAnimation {
+            copied = true
+        }
+        // Reset after 2 seconds
+        Task {
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            await MainActor.run {
+                withAnimation { copied = false }
+            }
+        }
     }
 }
 

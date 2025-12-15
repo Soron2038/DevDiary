@@ -164,6 +164,7 @@
 "github.auth.title" = "GitHub verbinden";
 "github.auth.instructions" = "Öffne GitHub im Browser und gib diesen Code ein, um DevDiary zu autorisieren.";
 "github.auth.openInBrowser" = "Im Browser öffnen";
+"github.auth.copyCode" = "Code kopieren";
 
 /* Onboarding */
 "onboarding.button.back" = "Zurück";
@@ -225,3 +226,16 @@
 "git.status.ahead" = "%d zum Pushen";
 "git.status.behind" = "%d zum Pullen";
 "git.status.diverged" = "Divergiert";
+
+/* Dashboard Tab */
+"dashboard.tab.github" = "GitHub";
+
+/* GitHub View */
+"github.prs.title" = "Pull Requests";
+"github.prs.empty" = "Keine offenen Pull Requests";
+"github.issues.title" = "Zugewiesene Issues";
+"github.issues.empty" = "Keine zugewiesenen Issues";
+"github.refresh" = "Aktualisieren";
+"github.openInBrowser" = "Auf GitHub öffnen";
+"github.notConnected" = "Nicht mit GitHub verbunden";
+"github.notConnected.hint" = "Verbinde dein GitHub-Konto in den Einstellungen.";
