@@ -138,6 +138,26 @@ This is an early-stage project. As of now:
 - Export formats (Markdown, PDF, JSON)
 - Build & test integration
 - IDE plugins (Xcode, VS Code, JetBrains)
+- **CloudKit Sync** - Synchronize data across multiple Macs (see below)
+
+### CloudKit Sync (Multi-Mac Support)
+
+**Goal:** Allow users to work on multiple Macs (e.g., office + home) with synchronized DevDiary data.
+
+**Why CloudKit over iCloud file sync:**
+- Record-level conflict resolution (not whole-file)
+- Automatic merge of concurrent changes
+- Native Apple technology, privacy-friendly
+- Works well offline with automatic sync when online
+
+**Implementation considerations:**
+- Migrate from pure SQLite to CloudKit + local cache
+- CKRecord types: Projects, Sessions, Commits
+- Use CKSubscription for real-time updates
+- Handle first-time sync/migration from existing local data
+- Optional: Allow users to opt-out and keep local-only mode
+
+**Complexity:** High (requires significant refactoring of DatabaseManager)
 
 ## Development Language
 
