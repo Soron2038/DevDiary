@@ -444,6 +444,90 @@
         "de" : { "stringUnit" : { "state" : "translated", "value" : "Lizenz" } },
         "en" : { "stringUnit" : { "state" : "translated", "value" : "License" } }
       }
+    },
+    "projects.remove" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Entfernen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove" } }
+      }
+    },
+    "projects.remove.tooltip" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekt aus DevDiary entfernen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove project from DevDiary" } }
+      }
+    },
+    "projects.remove.confirm.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekt entfernen?" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove project?" } }
+      }
+    },
+    "projects.remove.confirm.message" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das Projekt und seine Historie (Sessions und Commits) werden aus DevDiary gelöscht. Lokale Dateien bleiben unverändert." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The project and its history (sessions and commits) will be deleted from DevDiary. Local files remain untouched." } }
+      }
+    },
+    "projects.remove.confirm.delete" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Entfernen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove" } }
+      }
+    },
+    "settings.accounts.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Konten" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Accounts" } }
+      }
+    },
+    "settings.accounts.notConnected" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht verbunden" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not connected" } }
+      }
+    },
+    "settings.accounts.connected" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verbunden" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connected" } }
+      }
+    },
+    "settings.accounts.connectedAs" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verbunden als %@" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connected as %@" } }
+      }
+    },
+    "settings.accounts.connect" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mit GitHub verbinden" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connect to GitHub" } }
+      }
+    },
+    "settings.accounts.disconnect" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verbindung trennen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Disconnect" } }
+      }
+    },
+    "github.auth.title" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "GitHub verbinden" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connect GitHub" } }
+      }
+    },
+    "github.auth.instructions" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Öffne GitHub im Browser und gib diesen Code ein, um DevDiary zu autorisieren." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open GitHub in your browser and enter this code to authorize DevDiary." } }
+      }
+    },
+    "github.auth.openInBrowser" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Im Browser öffnen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open in Browser" } }
+      }
     }
   },
   "version" : "1.0"

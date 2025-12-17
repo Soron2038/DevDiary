@@ -1,0 +1,247 @@
+/* Menubar */
+"menubar.todaySummary" = "Heute";
+"menubar.stat.time" = "Arbeitszeit";
+"menubar.stat.commits" = "Commits";
+"menubar.lastCommit" = "Letzter Commit";
+"menubar.noCommits" = "Heute noch keine Commits";
+"menubar.button.dashboard" = "Dashboard";
+"menubar.button.settings" = "Einstellungen";
+"menubar.button.quit" = "Beenden";
+"menubar.button.refresh" = "Aktualisieren";
+"menubar.tooltip.commits" = "%d Commits heute";
+"menubar.tooltip.noCommits" = "DevDiary - Keine Commits heute";
+"menubar.loading" = "Lade Daten...";
+"menubar.activeSession" = "Aktive Session";
+
+/* Database */
+"database.error.title" = "Datenbankfehler";
+"database.error.message" = "Die Datenbank konnte nicht initialisiert werden: %@";
+
+/* Buttons */
+"button.quit" = "Beenden";
+"button.cancel" = "Abbrechen";
+
+/* Dashboard Tabs */
+"dashboard.tab.today" = "Heute";
+"dashboard.tab.history" = "Verlauf";
+"dashboard.tab.projects" = "Projekte";
+"dashboard.tab.settings" = "Einstellungen";
+
+/* Today View */
+"today.statistics.title" = "Statistiken";
+"today.stat.workTime" = "Arbeitszeit";
+"today.stat.commits" = "Commits";
+"today.stat.additions" = "Hinzugefügt";
+"today.stat.deletions" = "Gelöscht";
+"today.sessions.title" = "Sessions";
+"today.sessions.empty" = "Keine Sessions heute";
+"today.commits.title" = "Commits";
+"today.commits.empty" = "Keine Commits heute";
+"today.empty" = "Noch keine Aktivität heute";
+"today.empty.hint" = "Starte mit dem Coden und deine Aktivität wird hier erscheinen";
+
+/* Session */
+"session.unknownProject" = "Unbekanntes Projekt";
+"session.now" = "jetzt";
+
+/* History View */
+"history.title" = "Verlauf";
+"history.today" = "Heute";
+"history.noActivity" = "Keine Aktivität";
+
+/* Projects View */
+"projects.title" = "Projekte";
+"projects.add" = "Projekt hinzufügen";
+"projects.refresh" = "Aktualisieren";
+"projects.empty" = "Keine Projekte gefunden";
+"projects.discover" = "Repositories suchen";
+"projects.selectProject" = "Wähle ein Projekt aus";
+"projects.openInFinder" = "Im Finder öffnen";
+"projects.tracking.on" = "Tracking aktiv";
+"projects.tracking.off" = "Tracking pausiert";
+"projects.stat.totalTime" = "Gesamtzeit";
+"projects.stat.commits" = "Commits";
+"projects.stat.sessions" = "Sessions";
+"projects.stat.additions" = "Hinzugefügt";
+"projects.stat.deletions" = "Gelöscht";
+"projects.stat.lastActivity" = "Letzte Aktivität";
+"projects.noStats" = "Keine Statistiken verfügbar";
+"projects.add.title" = "Repository hinzufügen";
+"projects.add.description" = "Wähle einen Ordner mit einem Git-Repository aus";
+"projects.add.path" = "Pfad";
+"projects.add.browse" = "Durchsuchen";
+"projects.add.confirm" = "Hinzufügen";
+"projects.add.selectFolder" = "Git-Repository auswählen";
+
+/* Projects → Remove */
+"projects.remove" = "Entfernen";
+"projects.remove.tooltip" = "Projekt aus DevDiary entfernen";
+"projects.remove.confirm.title" = "Projekt entfernen?";
+"projects.remove.confirm.message" = "Das Projekt und seine Historie (Sessions und Commits) werden aus DevDiary gelöscht. Lokale Dateien bleiben unverändert.";
+"projects.remove.confirm.delete" = "Entfernen";
+
+/* Settings View */
+"settings.general.title" = "Allgemein";
+"settings.general.launchAtLogin" = "Bei Anmeldung starten";
+"settings.general.launchAtLogin.description" = "DevDiary automatisch beim Systemstart öffnen";
+"settings.tracking.title" = "Tracking";
+"settings.tracking.pollingInterval" = "Abfrage-Intervall";
+"settings.tracking.pollingInterval.description" = "Wie oft nach neuen Commits gesucht wird";
+"settings.tracking.sessionTimeout" = "Session-Timeout";
+"settings.tracking.sessionTimeout.description" = "Session endet nach dieser Inaktivitätszeit";
+"settings.privacy.title" = "Datenschutz";
+"settings.privacy.dataRetention" = "Daten aufbewahren für";
+"settings.privacy.dataRetention.description" = "Ältere Daten werden automatisch gelöscht";
+"settings.privacy.days" = "Tage";
+"settings.privacy.localOnly" = "Nur lokale Daten";
+"settings.privacy.localOnly.description" = "Alle Daten bleiben auf deinem Mac. Keine Cloud, keine Telemetrie.";
+"settings.about.title" = "Über";
+"settings.about.description" = "DevDiary trackt automatisch deine tägliche Entwicklungsarbeit und erstellt lesbare Zusammenfassungen.";
+"settings.about.github" = "GitHub";
+"settings.about.license" = "Lizenz";
+
+/* Settings → Accounts */
+"settings.accounts.title" = "Konten";
+"settings.accounts.environment.title" = "Umgebung";
+"settings.accounts.environment.dev" = "Entwicklung";
+"settings.accounts.environment.prod" = "Produktion";
+"settings.accounts.environment.note" = "Auswahl steuert, welche Client ID genutzt wird (getrennte Werte pro Umgebung).";
+
+/* Accounts → Log */
+"settings.accounts.log.title" = "Aktivitätslog";
+"settings.accounts.log.clear" = "Log leeren";
+"settings.accounts.log.empty" = "Noch keine Einträge.";
+"settings.accounts.log.retention" = "Aufbewahrung:";
+"settings.accounts.notConnected" = "Nicht verbunden";
+"settings.accounts.connected" = "Verbunden";
+"settings.accounts.connectedAs" = "Verbunden als %@";
+"settings.accounts.connect" = "Mit GitHub verbinden";
+"settings.accounts.disconnect" = "Verbindung trennen";
+"settings.accounts.deleteToken" = "Token löschen";
+"settings.accounts.deleteToken.confirm.title" = "Token für gewählte Umgebung löschen?";
+"settings.accounts.deleteToken.confirm.message" = "Der gespeicherte GitHub-Token für die aktuelle Umgebung wird aus dem Schlüsselbund gelöscht.";
+"settings.accounts.deleteToken.confirm.delete" = "Löschen";
+"settings.accounts.deleteAllTokens" = "Alle Tokens löschen";
+"settings.accounts.deleteAllTokens.confirm.title" = "Alle GitHub-Tokens löschen?";
+"settings.accounts.deleteAllTokens.confirm.message" = "Löscht alle gespeicherten GitHub-Tokens (Entwicklung, Produktion und ggf. alte Einträge).";
+"settings.accounts.deleteAllTokens.confirm.delete" = "Alle löschen";
+"settings.accounts.configure" = "Konfigurieren";
+"settings.accounts.configure.help" = "GitHub Client ID hinterlegen"
+;
+
+/* GitHub Setup */
+"github.setup.title" = "GitHub einrichten";
+"github.setup.description" = "DevDiary nutzt den GitHub Device Flow. Dafür wird nur die Client ID deiner GitHub OAuth-App benötigt (kein Secret).";
+"github.setup.step1" = "Öffne GitHub → Developer Settings → OAuth Apps → Neue OAuth-App";
+"github.setup.step2" = "Trage als Callback-URL z. B. devdiary://oauth/github oder https://localhost ein (wird im Device Flow nicht verwendet)";
+"github.setup.step3" = "Kopiere die Client ID und füge sie unten ein";
+"github.setup.clientId.placeholder" = "GitHub Client ID einfügen";
+"github.setup.save" = "Speichern";
+"github.setup.openGitHub" = "GitHub Entwickler-Einstellungen öffnen";
+"github.setup.openDocs" = "GitHub Doku öffnen";
+"github.setup.envvar.hint" = "Alternativ per Umgebungsvariable DEV_DIARY_GITHUB_CLIENT_ID setzbar";
+
+/* Status */
+"status.clientIdSaved" = "GitHub Client ID gespeichert";
+"status.openingBrowser" = "GitHub wird im Browser geöffnet…";
+"status.connected" = "GitHub verbunden";
+"status.connectedAs" = "Verbunden als %@";
+"status.disconnected" = "Verbindung getrennt";
+"status.tokenDeleted" = "Token gelöscht";
+"status.allTokensDeleted" = "Alle Tokens gelöscht";
+"status.logCleared" = "Log geleert";
+"status.error.authFailed" = "Autorisierung fehlgeschlagen";
+
+/* Retention */
+"settings.retention.1d" = "1 Tag";
+"settings.retention.7d" = "7 Tage";
+"settings.retention.30d" = "30 Tage";
+"settings.retention.90d" = "90 Tage";
+"settings.retention.180d" = "6 Monate";
+"settings.retention.365d" = "1 Jahr";
+
+/* GitHub Device Auth */
+"github.auth.title" = "GitHub verbinden";
+"github.auth.instructions" = "Öffne GitHub im Browser und gib diesen Code ein, um DevDiary zu autorisieren.";
+"github.auth.openInBrowser" = "Im Browser öffnen";
+"github.auth.copyCode" = "Code kopieren";
+
+/* Onboarding */
+"onboarding.button.back" = "Zurück";
+"onboarding.button.next" = "Weiter";
+"onboarding.button.start" = "Los geht's";
+"onboarding.welcome.title" = "Willkommen bei DevDiary";
+"onboarding.welcome.subtitle" = "Dein automatisches Tagebuch für die tägliche Entwicklungsarbeit";
+"onboarding.feature.tracking" = "Automatisches\nZeit-Tracking";
+"onboarding.feature.git" = "Git-basierte\nAktivität";
+"onboarding.feature.privacy" = "100% Lokal\n& Privat";
+"onboarding.privacy.title" = "Deine Daten gehören dir";
+"onboarding.privacy.local" = "Alle Daten bleiben auf deinem Mac";
+"onboarding.privacy.noNetwork" = "Keine Netzwerkverbindung erforderlich";
+"onboarding.privacy.control" = "Du kontrollierst was getrackt wird";
+"onboarding.privacy.delete" = "Daten jederzeit löschbar";
+"onboarding.setup.title" = "Repositories finden";
+"onboarding.setup.description" = "DevDiary sucht automatisch nach Git-Repositories in deinen üblichen Entwicklungsordnern.";
+"onboarding.setup.paths" = "Durchsuchte Ordner:";
+"onboarding.setup.discovering" = "Suche Repositories...";
+"onboarding.setup.found" = "%d Repositories gefunden";
+
+/* Projects Tabs */
+"projects.tab.local" = "Lokal";
+"projects.tab.remote" = "Remote";
+
+/* Commits */
+"commit.openOnGitHub" = "Auf GitHub öffnen";
+
+/* Remote Repositories */
+"remote.search" = "Suchen...";
+"remote.showForks" = "Forks";
+"remote.showArchived" = "Archiviert";
+"remote.refresh" = "Aktualisieren";
+"remote.loading" = "Lade Repositories...";
+"remote.empty" = "Keine Repositories gefunden";
+"remote.retry" = "Erneut versuchen";
+"remote.notConnected" = "Nicht mit GitHub verbunden";
+"remote.notConnected.hint" = "Verbinde dein GitHub-Konto in den Einstellungen, um deine Remote-Repositories zu sehen.";
+"remote.localAvailable" = "Lokal vorhanden";
+"remote.notLocal" = "Nicht lokal";
+"remote.openInBrowser" = "Auf GitHub öffnen";
+"remote.clone" = "Klonen";
+"remote.cloneSuccess" = "%@ wurde geklont und hinzugefügt";
+"remote.openInFinder" = "Im Finder öffnen";
+"remote.cloneDirectory.tooltip" = "Zielverzeichnis für geklonte Repositories";
+"remote.cloneDirectory.select" = "Verzeichnis für geklonte Repositories wählen";
+
+/* Workflow Status */
+"workflow.status.success" = "Build erfolgreich";
+"workflow.status.failure" = "Build fehlgeschlagen";
+"workflow.status.pending" = "Build läuft...";
+"workflow.status.cancelled" = "Build abgebrochen";
+"workflow.status.skipped" = "Build übersprungen";
+"workflow.status.unknown" = "Build-Status unbekannt";
+"workflow.status.noWorkflows" = "Keine Workflows";
+
+/* Ahead/Behind Status */
+"git.status.upToDate" = "Aktuell";
+"git.status.ahead" = "%d zum Pushen";
+"git.status.behind" = "%d zum Pullen";
+"git.status.diverged" = "Divergiert";
+
+/* Dashboard Tab */
+"dashboard.tab.github" = "GitHub";
+
+/* GitHub View */
+"github.prs.title" = "Pull Requests";
+"github.prs.empty" = "Keine offenen Pull Requests";
+"github.issues.title" = "Zugewiesene Issues";
+"github.issues.empty" = "Keine zugewiesenen Issues";
+"github.refresh" = "Aktualisieren";
+"github.openInBrowser" = "Auf GitHub öffnen";
+"github.notConnected" = "Nicht mit GitHub verbunden";
+"github.notConnected.hint" = "Verbinde dein GitHub-Konto in den Einstellungen.";
+"github.tokenExpired.title" = "GitHub-Sitzung abgelaufen";
+"github.tokenExpired.message" = "Deine GitHub-Verbindung ist nicht mehr gültig. Bitte verbinde dich erneut in den Einstellungen.";
+"github.error.offline" = "Keine Internetverbindung. Bitte prüfe deine Netzwerkverbindung.";
+
+/* Buttons */
+"button.ok" = "OK";
