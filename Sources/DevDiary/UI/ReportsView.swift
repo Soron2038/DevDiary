@@ -60,26 +60,48 @@ struct ReportsView: View {
                     Divider()
                     
                     // Custom date range
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 12) {
                         Text("reports.customRange")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         
-                        DatePicker(
-                            String(localized: "reports.from"),
-                            selection: $customStartDate,
-                            in: ...Date(),
-                            displayedComponents: .date
-                        )
-                        .datePickerStyle(.compact)
-                        
-                        DatePicker(
-                            String(localized: "reports.to"),
-                            selection: $customEndDate,
-                            in: ...Date(),
-                            displayedComponents: .date
-                        )
-                        .datePickerStyle(.compact)
+                        // Date range with aligned labels
+                        VStack(spacing: 8) {
+                            HStack {
+                                Text("reports.from")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 32, alignment: .leading)
+                                
+                                DatePicker(
+                                    "",
+                                    selection: $customStartDate,
+                                    in: ...Date(),
+                                    displayedComponents: .date
+                                )
+                                .datePickerStyle(.field)
+                                .labelsHidden()
+                            }
+                            
+                            HStack {
+                                Text("reports.to")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 32, alignment: .leading)
+                                
+                                DatePicker(
+                                    "",
+                                    selection: $customEndDate,
+                                    in: ...Date(),
+                                    displayedComponents: .date
+                                )
+                                .datePickerStyle(.field)
+                                .labelsHidden()
+                            }
+                        }
+                        .padding(10)
+                        .background(Color(nsColor: .controlBackgroundColor))
+                        .cornerRadius(8)
                         
                         Button(action: {
                             selectedReportType = .custom
