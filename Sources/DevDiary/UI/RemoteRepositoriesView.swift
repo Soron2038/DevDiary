@@ -5,6 +5,7 @@ import AppKit
 struct RemoteRepositoriesView: View {
     @State private var repositories: [GitHubRepository] = []
     @State private var localRemoteURLs: Set<String> = [] // Normalized URLs of local projects
+    @State private var localProjectPaths: [String: String] = [:] // Normalized URL -> local path
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var searchText = ""
@@ -22,6 +23,9 @@ struct RemoteRepositoriesView: View {
     // CI status
     @State private var workflowStatuses: [Int: GitHubService.WorkflowRunStatus] = [:]
     @State private var isLoadingStatuses = false
+    
+    // Git status for local repos
+    @State private var repoStatuses: [Int: GitService.RepositoryStatus] = [:]
     
     private var filteredRepositories: [GitHubRepository] {
         if searchText.isEmpty {
@@ -224,6 +228,7 @@ struct RemoteRepositoriesView: View {
             RemoteRepositoryRow(
                 repository: repo,
                 isLocallyAvailable: isLocallyAvailable(repo),
+                repositoryStatus: repoStatuses[repo.id],
                 isCloning: cloningRepoId == repo.id,
                 workflowStatus: workflowStatuses[repo.id],
                 onOpenInBrowser: { openInBrowser(repo) },
@@ -249,6 +254,8 @@ struct RemoteRepositoriesView: View {
                 await MainActor.run {
                     self.repositories = repos
                     self.isLoading = false
+                    // Load git status for local repos
+                    self.loadRepoStatuses(for: repos)
                 }
                 // Load workflow statuses in background
                 await loadWorkflowStatuses(for: repos)
@@ -265,16 +272,25 @@ struct RemoteRepositoriesView: View {
         do {
             let projects = try DatabaseManager.shared.getAllProjects()
             var urls = Set<String>()
+            var paths: [String: String] = [:]
             for project in projects {
                 if let remoteURL = GitService.shared.getRemoteURL(at: project.path),
                    let normalized = GitService.shared.normalizeToHTTPS(remoteURL) {
-                    urls.insert(normalized.lowercased())
+                    let normalizedLower = normalized.lowercased()
+                    urls.insert(normalizedLower)
+                    paths[normalizedLower] = project.path
                 }
             }
             localRemoteURLs = urls
+            localProjectPaths = paths
         } catch {
             // Ignore errors
         }
+    }
+    
+    private func getLocalPath(for repo: GitHubRepository) -> String? {
+        let repoURL = repo.htmlURL.lowercased()
+        return localProjectPaths[repoURL]
     }
     
     private func isLocallyAvailable(_ repo: GitHubRepository) -> Bool {
@@ -305,6 +321,19 @@ struct RemoteRepositoriesView: View {
             self.workflowStatuses = statuses
             self.isLoadingStatuses = false
         }
+    }
+    
+    private func loadRepoStatuses(for repos: [GitHubRepository]) {
+        var statuses: [Int: GitService.RepositoryStatus] = [:]
+        
+        for repo in repos {
+            if let localPath = getLocalPath(for: repo) {
+                let status = GitService.shared.getRepositoryStatus(at: localPath)
+                statuses[repo.id] = status
+            }
+        }
+        
+        repoStatuses = statuses
     }
     
     private var cloneDirectoryDisplayName: String {
@@ -368,6 +397,7 @@ struct RemoteRepositoriesView: View {
 private struct RemoteRepositoryRow: View {
     let repository: GitHubRepository
     let isLocallyAvailable: Bool
+    let repositoryStatus: GitService.RepositoryStatus?
     let isCloning: Bool
     let workflowStatus: GitHubService.WorkflowRunStatus?
     let onOpenInBrowser: () -> Void
@@ -431,11 +461,28 @@ private struct RemoteRepositoryRow: View {
                 }
                 
                 HStack(spacing: 12) {
-                    // Local status
+                    // Local status with ahead/behind
                     if isLocallyAvailable {
-                        Label(String(localized: "remote.localAvailable"), systemImage: "checkmark.circle.fill")
-                            .font(.caption)
-                            .foregroundColor(.green)
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                            Text(String(localized: "remote.localAvailable"))
+                            
+                            // Show ahead/behind status
+                            if let status = repositoryStatus, status.hasRemoteChanges {
+                                HStack(spacing: 2) {
+                                    if status.ahead > 0 {
+                                        Text("↑\(status.ahead)")
+                                            .foregroundColor(.orange)
+                                    }
+                                    if status.behind > 0 {
+                                        Text("↓\(status.behind)")
+                                            .foregroundColor(.blue)
+                                    }
+                                }
+                            }
+                        }
+                        .font(.caption)
                     } else {
                         Label(String(localized: "remote.notLocal"), systemImage: "arrow.down.circle")
                             .font(.caption)
