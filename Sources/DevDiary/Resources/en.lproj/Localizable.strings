@@ -245,3 +245,39 @@
 
 /* Buttons */
 "button.ok" = "OK";
+
+/* Reports */
+"dashboard.tab.reports" = "Reports";
+"reports.title" = "Generate Report";
+"reports.type" = "Time Period";
+"reports.type.today" = "Today";
+"reports.type.yesterday" = "Yesterday";
+"reports.type.thisWeek" = "This Week";
+"reports.type.lastWeek" = "Last Week";
+"reports.type.thisMonth" = "This Month";
+"reports.type.custom" = "Custom";
+"reports.customRange" = "Custom Date Range";
+"reports.from" = "From";
+"reports.to" = "To";
+"reports.generate" = "Generate Report";
+"reports.copy" = "Copy to Clipboard";
+"reports.save" = "Save as File";
+"reports.save.message" = "Save report";
+"reports.saved" = "Saved";
+"reports.preview" = "Preview";
+"reports.empty" = "Select a time period to generate a report";
+"report.title.day" = "Daily Report";
+"report.title.range" = "Activity Report";
+"report.section.summary" = "Summary";
+"report.section.projects" = "Projects";
+"report.section.commits" = "Commits";
+"report.stat.workTime" = "Work Time";
+"report.stat.commits" = "Commits";
+"report.stat.linesAdded" = "Lines added";
+"report.stat.linesRemoved" = "Lines removed";
+"report.stat.projects" = "Active Projects";
+"report.stat.time" = "Time";
+"report.stat.changes" = "Changes";
+"report.footer" = "Generated with";
+"report.error.invalidRange" = "Invalid date range";
+"report.error.noData" = "No data for this period";

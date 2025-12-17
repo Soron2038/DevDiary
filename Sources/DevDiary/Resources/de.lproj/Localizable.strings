@@ -245,3 +245,39 @@
 
 /* Buttons */
 "button.ok" = "OK";
+
+/* Reports */
+"dashboard.tab.reports" = "Reports";
+"reports.title" = "Report erstellen";
+"reports.type" = "Zeitraum";
+"reports.type.today" = "Heute";
+"reports.type.yesterday" = "Gestern";
+"reports.type.thisWeek" = "Diese Woche";
+"reports.type.lastWeek" = "Letzte Woche";
+"reports.type.thisMonth" = "Dieser Monat";
+"reports.type.custom" = "Benutzerdefiniert";
+"reports.customRange" = "Benutzerdefinierter Zeitraum";
+"reports.from" = "Von";
+"reports.to" = "Bis";
+"reports.generate" = "Report erstellen";
+"reports.copy" = "In Zwischenablage kopieren";
+"reports.save" = "Als Datei speichern";
+"reports.save.message" = "Report speichern";
+"reports.saved" = "Gespeichert";
+"reports.preview" = "Vorschau";
+"reports.empty" = "Wähle einen Zeitraum um einen Report zu erstellen";
+"report.title.day" = "Tagesbericht";
+"report.title.range" = "Aktivitätsbericht";
+"report.section.summary" = "Zusammenfassung";
+"report.section.projects" = "Projekte";
+"report.section.commits" = "Commits";
+"report.stat.workTime" = "Arbeitszeit";
+"report.stat.commits" = "Commits";
+"report.stat.linesAdded" = "Zeilen hinzugefügt";
+"report.stat.linesRemoved" = "Zeilen entfernt";
+"report.stat.projects" = "Aktive Projekte";
+"report.stat.time" = "Zeit";
+"report.stat.changes" = "Änderungen";
+"report.footer" = "Erstellt mit";
+"report.error.invalidRange" = "Ungültiger Zeitraum";
+"report.error.noData" = "Keine Daten für diesen Zeitraum";
