@@ -24,17 +24,11 @@ struct DashboardView: View {
                 }
                 .tag(2)
             
-            GitHubView()
-                .tabItem {
-                    Label("dashboard.tab.github", systemImage: "arrow.triangle.pull")
-                }
-                .tag(3)
-            
             SettingsView()
                 .tabItem {
                     Label("dashboard.tab.settings", systemImage: "gear")
                 }
-                .tag(4)
+                .tag(3)
         }
         .frame(minWidth: 700, minHeight: 500)
     }

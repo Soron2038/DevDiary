@@ -1,5 +1,4 @@
 import SwiftUI
-import AppKit
 
 /// Today's activity view showing sessions, commits and statistics
 struct TodayView: View {
@@ -7,7 +6,6 @@ struct TodayView: View {
     @State private var commits: [Commit] = []
     @State private var sessions: [Session] = []
     @State private var projects: [UUID: Project] = [:]
-    @State private var sessionToProject: [UUID: Project] = [:] // sessionId -> Project
     @State private var isLoading = true
     
     var body: some View {
@@ -158,7 +156,7 @@ struct TodayView: View {
                 .frame(maxWidth: .infinity)
             } else {
                 List(commits, id: \.id) { commit in
-                    CommitRow(commit: commit, project: sessionToProject[commit.sessionId])
+                    CommitRow(commit: commit)
                 }
                 .listStyle(.plain)
             }
@@ -168,24 +166,16 @@ struct TodayView: View {
     // MARK: - Empty State
     
     private var emptyState: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 8) {
             Image(systemName: "cup.and.saucer")
-                .font(.system(size: 48))
+                .font(.largeTitle)
                 .foregroundColor(.secondary)
-            
-            VStack(spacing: 4) {
-                Text("today.empty")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-                
-                Text("today.empty.hint")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary.opacity(0.7))
-                    .multilineTextAlignment(.center)
-            }
+            Text("today.empty")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(40)
+        .padding()
     }
     
     // MARK: - Data Loading
@@ -202,13 +192,6 @@ struct TodayView: View {
             let allProjects = try DatabaseManager.shared.getAllProjects()
             projects = Dictionary(uniqueKeysWithValues: allProjects.map { ($0.id, $0) })
             
-            // Build sessionId -> Project mapping for commits
-            for session in sessions {
-                if let project = projects[session.projectId] {
-                    sessionToProject[session.id] = project
-                }
-            }
-            
             isLoading = false
         } catch {
             isLoading = false
@@ -223,8 +206,6 @@ private struct StatCard: View {
     let value: String
     let icon: String
     let color: Color
-    
-    @State private var isHovered = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -243,12 +224,6 @@ private struct StatCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(nsColor: .controlBackgroundColor))
         .cornerRadius(8)
-        .scaleEffect(isHovered ? 1.02 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isHovered)
-        .onHover { hovering in
-            isHovered = hovering
-        }
-        .help(title)
     }
 }
 
@@ -256,30 +231,15 @@ private struct SessionRow: View {
     let session: Session
     let project: Project?
     
-    @State private var isHovered = false
-    
     var body: some View {
         HStack {
-            // Active indicator with pulse animation
+            // Active indicator
             Circle()
                 .fill(session.isActive ? Color.green : Color.gray.opacity(0.3))
                 .frame(width: 8, height: 8)
-                .overlay {
-                    if session.isActive {
-                        Circle()
-                            .stroke(Color.green.opacity(0.5), lineWidth: 2)
-                            .scaleEffect(1.5)
-                            .opacity(0)
-                            .animation(
-                                .easeOut(duration: 1.0)
-                                .repeatForever(autoreverses: false),
-                                value: session.isActive
-                            )
-                    }
-                }
             
             VStack(alignment: .leading, spacing: 2) {
-                Text(project?.name ?? String(localized: "session.unknownProject"))
+                Text(project?.name ?? "Unknown")
                     .font(.subheadline)
                     .fontWeight(.medium)
                 
@@ -289,7 +249,7 @@ private struct SessionRow: View {
                         Text("-")
                         Text(endTime, style: .time)
                     } else {
-                        Text("- " + String(localized: "session.now"))
+                        Text("- now")
                             .foregroundColor(.green)
                     }
                 }
@@ -303,30 +263,14 @@ private struct SessionRow: View {
                 .font(.caption)
                 .fontWeight(.medium)
                 .foregroundColor(.secondary)
-                .monospacedDigit()
         }
         .padding(.vertical, 4)
-        .padding(.horizontal, 4)
-        .background(isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
-        .cornerRadius(6)
-        .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.15)) {
-                isHovered = hovering
-            }
-        }
     }
 }
 
 private struct CommitRow: View {
     let commit: Commit
-    let project: Project?
     @State private var isExpanded = false
-    @State private var isHovered = false
-    
-    private var gitHubURL: URL? {
-        guard let project = project else { return nil }
-        return GitService.shared.getGitHubCommitURL(hash: commit.hash, at: project.path)
-    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -362,18 +306,6 @@ private struct CommitRow: View {
                             .font(.caption)
                             .foregroundColor(.red)
                     }
-                    
-                    // GitHub link button (only visible on hover if available)
-                    if let url = gitHubURL {
-                        Button(action: { NSWorkspace.shared.open(url) }) {
-                            Image(systemName: "arrow.up.right.square")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .buttonStyle(.plain)
-                        .opacity(isHovered ? 1.0 : 0.0)
-                        .help(String(localized: "commit.openOnGitHub"))
-                    }
                 }
             }
             
@@ -387,11 +319,6 @@ private struct CommitRow: View {
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
-        .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.15)) {
-                isHovered = hovering
-            }
-        }
         .onTapGesture {
             withAnimation(.easeInOut(duration: 0.2)) {
                 isExpanded.toggle()

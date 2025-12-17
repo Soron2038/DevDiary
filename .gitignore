@@ -24,11 +24,3 @@ fastlane/test_output
 # Other
 *.swp
 *~
-
-# Local only
-NotSynced/
-
-# Distribution artifacts
-Distribution/*.app
-Distribution/*.dmg
-Distribution/*.iconset

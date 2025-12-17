@@ -1,50 +1,13 @@
 import SwiftUI
 import AppKit
 
-/// Tab selection for Projects view
-enum ProjectsTab: String, CaseIterable {
-    case local
-    case remote
-}
-
-/// Projects container view with tab picker
+/// Projects management view
 struct ProjectsView: View {
-    @State private var selectedTab: ProjectsTab = .local
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            // Tab picker
-            Picker("", selection: $selectedTab) {
-                Text("projects.tab.local").tag(ProjectsTab.local)
-                Text("projects.tab.remote").tag(ProjectsTab.remote)
-            }
-            .pickerStyle(.segmented)
-            .frame(width: 200)
-            .padding(.vertical, 8)
-            
-            Divider()
-            
-            // Content based on selected tab
-            switch selectedTab {
-            case .local:
-                LocalProjectsView()
-            case .remote:
-                RemoteRepositoriesView()
-            }
-        }
-    }
-}
-
-/// Local projects management view
-struct LocalProjectsView: View {
     @State private var projects: [Project] = []
     @State private var projectStats: [UUID: StatisticsService.ProjectStatistics] = [:]
-    @State private var repoStatuses: [UUID: GitService.RepositoryStatus] = [:]
     @State private var selectedProject: Project?
     @State private var isLoading = true
     @State private var showingAddSheet = false
-    @State private var showingRemoveAlert = false
-    @State private var projectToRemove: Project?
     
     var body: some View {
         HSplitView {
@@ -61,18 +24,6 @@ struct LocalProjectsView: View {
                     }
                     .buttonStyle(.plain)
                     .help(String(localized: "projects.add"))
-                    
-                    Button(action: {
-                        if let selected = selectedProject {
-                            projectToRemove = selected
-                            showingRemoveAlert = true
-                        }
-                    }) {
-                        Image(systemName: "minus")
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(selectedProject == nil)
-                    .help(String(localized: "projects.remove.tooltip"))
                     
                     Button(action: refreshProjects) {
                         Image(systemName: "arrow.clockwise")
@@ -107,12 +58,7 @@ struct LocalProjectsView: View {
                         ProjectRow(
                             project: project,
                             stats: projectStats[project.id],
-                            repoStatus: repoStatuses[project.id],
-                            onToggleTracking: { toggleTracking(project) },
-                            onRemove: {
-                                projectToRemove = project
-                                showingRemoveAlert = true
-                            }
+                            onToggleTracking: { toggleTracking(project) }
                         )
                     }
                     .listStyle(.plain)
@@ -150,14 +96,6 @@ struct LocalProjectsView: View {
                 addProject(at: path)
             })
         }
-        .alert(String(localized: "projects.remove.confirm.title"), isPresented: $showingRemoveAlert, presenting: projectToRemove) { project in
-            Button(String(localized: "button.cancel"), role: .cancel) {}
-            Button(String(localized: "projects.remove.confirm.delete"), role: .destructive) {
-                removeProject(project)
-            }
-        } message: { _ in
-            Text(String(localized: "projects.remove.confirm.message"))
-        }
     }
     
     // MARK: - Actions
@@ -176,37 +114,13 @@ struct LocalProjectsView: View {
             }
             
             isLoading = false
-            
-            // Load repository statuses in background
-            loadRepoStatuses()
         } catch {
             isLoading = false
         }
     }
     
     private func refreshProjects() {
-        // Fetch from remotes first for accurate status
-        Task {
-            for project in projects {
-                GitService.shared.fetchRemote(at: project.path)
-            }
-            await MainActor.run {
-                loadProjects()
-            }
-        }
-    }
-    
-    private func loadRepoStatuses() {
-        Task {
-            var statuses: [UUID: GitService.RepositoryStatus] = [:]
-            for project in projects {
-                let status = GitService.shared.getRepositoryStatus(at: project.path)
-                statuses[project.id] = status
-            }
-            await MainActor.run {
-                self.repoStatuses = statuses
-            }
-        }
+        loadProjects()
     }
     
     private func discoverRepositories() {
@@ -242,18 +156,6 @@ struct LocalProjectsView: View {
             // Handle error
         }
     }
-    
-    private func removeProject(_ project: Project) {
-        do {
-            try DatabaseManager.shared.deleteProject(project)
-            if selectedProject?.id == project.id {
-                selectedProject = nil
-            }
-            loadProjects()
-        } catch {
-            // Handle error
-        }
-    }
 }
 
 // MARK: - Supporting Views
@@ -261,9 +163,7 @@ struct LocalProjectsView: View {
 private struct ProjectRow: View {
     let project: Project
     let stats: StatisticsService.ProjectStatistics?
-    let repoStatus: GitService.RepositoryStatus?
     let onToggleTracking: () -> Void
-    let onRemove: () -> Void
     
     var body: some View {
         HStack {
@@ -275,23 +175,9 @@ private struct ProjectRow: View {
             .buttonStyle(.plain)
             
             VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(project.name)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    
-                    // Repository status badge
-                    if let status = repoStatus, !status.isEmpty {
-                        Text(status.displayString)
-                            .font(.caption2)
-                            .fontWeight(.medium)
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(statusBackgroundColor(status))
-                            .foregroundColor(statusForegroundColor(status))
-                            .cornerRadius(4)
-                    }
-                }
+                Text(project.name)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
                 
                 if let stats = stats, stats.commitCount > 0 {
                     Text("\(stats.commitCount) commits • \(stats.formattedDuration)")
@@ -310,33 +196,6 @@ private struct ProjectRow: View {
         }
         .padding(.vertical, 4)
         .opacity(project.isTracked ? 1.0 : 0.6)
-        .contextMenu {
-            Button(role: .destructive, action: onRemove) {
-                Label(String(localized: "projects.remove"), systemImage: "trash")
-            }
-        }
-    }
-    
-    private func statusBackgroundColor(_ status: GitService.RepositoryStatus) -> Color {
-        if status.hasUncommittedChanges {
-            return Color.orange.opacity(0.2)  // Uncommitted changes
-        } else if status.behind > 0 {
-            return Color.blue.opacity(0.2)    // Behind: needs pull
-        } else if status.ahead > 0 {
-            return Color.green.opacity(0.2)   // Ahead: needs push
-        }
-        return Color.secondary.opacity(0.2)
-    }
-    
-    private func statusForegroundColor(_ status: GitService.RepositoryStatus) -> Color {
-        if status.hasUncommittedChanges {
-            return .orange
-        } else if status.behind > 0 {
-            return .blue
-        } else if status.ahead > 0 {
-            return .green
-        }
-        return .secondary
     }
 }
 
