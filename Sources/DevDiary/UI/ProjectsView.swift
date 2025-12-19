@@ -40,6 +40,7 @@ struct LocalProjectsView: View {
     @State private var projects: [Project] = []
     @State private var projectStats: [UUID: StatisticsService.ProjectStatistics] = [:]
     @State private var repoStatuses: [UUID: GitService.RepositoryStatus] = [:]
+    @State private var branches: [UUID: String] = [:]
     @State private var selectedProject: Project?
     @State private var isLoading = true
     @State private var showingAddSheet = false
@@ -108,6 +109,7 @@ struct LocalProjectsView: View {
                             project: project,
                             stats: projectStats[project.id],
                             repoStatus: repoStatuses[project.id],
+                            branch: branches[project.id],
                             onToggleTracking: { toggleTracking(project) },
                             onRemove: {
                                 projectToRemove = project
@@ -199,12 +201,17 @@ struct LocalProjectsView: View {
     private func loadRepoStatuses() {
         Task {
             var statuses: [UUID: GitService.RepositoryStatus] = [:]
+            var branchNames: [UUID: String] = [:]
             for project in projects {
                 let status = GitService.shared.getRepositoryStatus(at: project.path)
                 statuses[project.id] = status
+                if let branch = GitService.shared.getCurrentBranch(at: project.path) {
+                    branchNames[project.id] = branch
+                }
             }
             await MainActor.run {
                 self.repoStatuses = statuses
+                self.branches = branchNames
             }
         }
     }
@@ -262,6 +269,7 @@ private struct ProjectRow: View {
     let project: Project
     let stats: StatisticsService.ProjectStatistics?
     let repoStatus: GitService.RepositoryStatus?
+    let branch: String?
     let onToggleTracking: () -> Void
     let onRemove: () -> Void
     
@@ -279,6 +287,17 @@ private struct ProjectRow: View {
                     Text(project.name)
                         .font(.subheadline)
                         .fontWeight(.medium)
+                    
+                    // Branch name
+                    if let branch = branch {
+                        HStack(spacing: 2) {
+                            Image(systemName: "arrow.triangle.branch")
+                                .font(.caption2)
+                            Text(branch)
+                                .font(.caption2)
+                        }
+                        .foregroundColor(.secondary)
+                    }
                     
                     // Repository status badge
                     if let status = repoStatus, !status.isEmpty {

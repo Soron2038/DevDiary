@@ -33,6 +33,8 @@
 "today.stat.commits" = "Commits";
 "today.stat.additions" = "Hinzugefügt";
 "today.stat.deletions" = "Gelöscht";
+"today.weekOverview" = "Letzte 7 Tage";
+"today.week.noActivity" = "Keine Aktivität";
 "today.sessions.title" = "Sessions";
 "today.sessions.empty" = "Keine Sessions heute";
 "today.commits.title" = "Commits";

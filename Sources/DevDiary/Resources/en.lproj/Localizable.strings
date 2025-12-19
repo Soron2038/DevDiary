@@ -33,6 +33,8 @@
 "today.stat.commits" = "Commits";
 "today.stat.additions" = "Additions";
 "today.stat.deletions" = "Deletions";
+"today.weekOverview" = "Last 7 Days";
+"today.week.noActivity" = "No activity";
 "today.sessions.title" = "Sessions";
 "today.sessions.empty" = "No sessions today";
 "today.commits.title" = "Commits";

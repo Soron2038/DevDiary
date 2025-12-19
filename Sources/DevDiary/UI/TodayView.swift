@@ -4,6 +4,7 @@ import AppKit
 /// Today's activity view showing sessions, commits and statistics
 struct TodayView: View {
     @State private var statistics: StatisticsService.DayStatistics?
+    @State private var weekStats: [StatisticsService.DayStatistics] = []
     @State private var commits: [Commit] = []
     @State private var sessions: [Session] = []
     @State private var projects: [UUID: Project] = [:]
@@ -95,10 +96,39 @@ struct TodayView: View {
                         color: .red
                     )
                 }
+                
+                // Week overview
+                if !weekStats.isEmpty {
+                    weekOverview
+                }
             } else {
                 emptyState
             }
         }
+    }
+    
+    // MARK: - Week Overview
+    
+    private var weekOverview: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("today.weekOverview")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            HStack(alignment: .bottom, spacing: 4) {
+                ForEach(weekStats.reversed(), id: \.date) { dayStat in
+                    WeekDayBar(stat: dayStat, maxCommits: weekMaxCommits)
+                }
+            }
+            .frame(height: 50)
+        }
+        .padding(10)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .cornerRadius(8)
+    }
+    
+    private var weekMaxCommits: Int {
+        max(weekStats.map { $0.commitCount }.max() ?? 1, 1)
     }
     
     // MARK: - Sessions List
@@ -193,6 +223,7 @@ struct TodayView: View {
     private func loadData() {
         do {
             statistics = try StatisticsService.shared.getTodayStatistics()
+            weekStats = try StatisticsService.shared.getStatisticsForLastDays(7)
             commits = try DatabaseManager.shared.getCommitsForDate(Date())
                 .sorted { $0.timestamp > $1.timestamp }
             sessions = try DatabaseManager.shared.getSessionsForDate(Date())
@@ -249,6 +280,67 @@ private struct StatCard: View {
             isHovered = hovering
         }
         .help(title)
+    }
+}
+
+private struct WeekDayBar: View {
+    let stat: StatisticsService.DayStatistics
+    let maxCommits: Int
+    
+    private let calendar = Calendar.current
+    
+    private var isToday: Bool {
+        calendar.isDateInToday(stat.date)
+    }
+    
+    private var barHeight: CGFloat {
+        guard maxCommits > 0 else { return 4 }
+        let ratio = CGFloat(stat.commitCount) / CGFloat(maxCommits)
+        return max(ratio * 40, stat.commitCount > 0 ? 4 : 2)
+    }
+    
+    var body: some View {
+        VStack(spacing: 2) {
+            // Bar
+            RoundedRectangle(cornerRadius: 2)
+                .fill(barColor)
+                .frame(width: 28, height: barHeight)
+            
+            // Day label
+            Text(dayLabel)
+                .font(.system(size: 9))
+                .foregroundColor(isToday ? .accentColor : .secondary)
+                .fontWeight(isToday ? .bold : .regular)
+        }
+        .help(tooltipText)
+    }
+    
+    private var barColor: Color {
+        if stat.commitCount == 0 {
+            return Color.secondary.opacity(0.2)
+        } else if isToday {
+            return Color.accentColor
+        } else {
+            return Color.accentColor.opacity(0.6)
+        }
+    }
+    
+    private var dayLabel: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E"
+        return String(formatter.string(from: stat.date).prefix(2))
+    }
+    
+    private var tooltipText: String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .medium
+        let dateStr = dateFormatter.string(from: stat.date)
+        
+        if stat.commitCount == 0 {
+            return "\(dateStr): \(String(localized: "today.week.noActivity"))"
+        } else {
+            return "\(dateStr): \(stat.commitCount) commits, \(stat.formattedDuration)"
+        }
     }
 }
 
