@@ -360,13 +360,27 @@ struct RemoteRepositoriesView: View {
     private func cloneRepository(_ repo: GitHubRepository) {
         guard cloningRepoId == nil else { return } // Already cloning
         
+        // Prompt for destination
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.message = String(localized: "remote.cloneDirectory.select")
+        panel.prompt = String(localized: "remote.clone")
+        
+        // Start at default directory
+        let expandedPath = (defaultCloneDirectory as NSString).expandingTildeInPath
+        panel.directoryURL = URL(fileURLWithPath: expandedPath)
+        
+        guard panel.runModal() == .OK, let targetURL = panel.url else { return }
+        let targetDir = targetURL.path
+        
         cloningRepoId = repo.id
         cloneError = nil
         showCloneSuccess = false
         
         Task {
             do {
-                let targetDir = (defaultCloneDirectory as NSString).expandingTildeInPath
                 let clonedPath = try await GitService.shared.cloneRepository(
                     url: repo.cloneURL,
                     to: targetDir
