@@ -283,3 +283,70 @@
 "report.footer" = "Erstellt mit";
 "report.error.invalidRange" = "Ungültiger Zeitraum";
 "report.error.noData" = "Keine Daten für diesen Zeitraum";
+
+/* Git-Tab (vereinheitlicht PRs/MRs + Issues über alle Provider) */
+"dashboard.tab.git" = "Git";
+"git.prs.title" = "Pull/Merge Requests";
+"git.prs.empty" = "Keine offenen Pull/Merge Requests";
+"git.issues.title" = "Zugewiesene Issues";
+"git.issues.empty" = "Keine zugewiesenen Issues";
+"git.refresh" = "Aktualisieren";
+"git.openInBrowser" = "Im Browser öffnen";
+"git.draft" = "Entwurf";
+"git.notConnected" = "Kein Account verbunden";
+"git.notConnected.hint" = "Verbinde GitHub oder füge eine GitLab-Instanz in den Einstellungen → Accounts hinzu.";
+"git.openAccounts" = "Accounts öffnen…";
+"git.tokenExpired.title" = "Sitzung abgelaufen";
+"git.tokenExpired.message" = "Eine deiner Forge-Verbindungen ist nicht mehr gültig. Bitte verbinde neu unter Einstellungen → Accounts.";
+
+/* Accounts-Sheet */
+"button.done" = "Fertig";
+"accounts.title" = "Accounts";
+"accounts.addGitLab" = "GitLab-Instanz hinzufügen";
+"accounts.notConnected" = "Nicht verbunden";
+"accounts.connect" = "Verbinden";
+"accounts.disconnect" = "Trennen";
+"accounts.connected" = "Verbunden";
+"accounts.connectedAs" = "Verbunden als %@";
+"accounts.remove.help" = "Diese GitLab-Instanz entfernen";
+"accounts.banner.gitlabAdded" = "GitLab-Instanz %@ hinzugefügt";
+"accounts.banner.removed" = "%@ entfernt";
+"accounts.deleteAllTokens" = "Alle Tokens löschen";
+"accounts.deleteAllTokens.confirm.title" = "Alle gespeicherten Tokens löschen?";
+"accounts.deleteAllTokens.confirm.message" = "Entfernt alle GitHub- und GitLab-Tokens aus dem Keychain. Die Account-Daten bleiben erhalten, du kannst dich später neu verbinden.";
+"accounts.deleteAllTokens.confirm.delete" = "Alle löschen";
+"accounts.github.environment" = "Umgebung:";
+"accounts.github.environment.dev" = "Entwicklung";
+"accounts.github.environment.prod" = "Produktion";
+"accounts.github.configureClientId" = "Client ID konfigurieren…";
+
+/* Einstellungen → Accounts (Eintrag, der das Sheet öffnet) */
+"settings.accounts.manage" = "Accounts verwalten…";
+"settings.accounts.summary.title" = "Verbundene Provider";
+"settings.accounts.summary.none" = "Kein Provider verbunden.";
+"settings.accounts.summary.status" = "%d von %d Accounts verbunden";
+
+/* GitLab-Instanz hinzufügen */
+"gitlab.add.title.url" = "GitLab-Instanz hinzufügen";
+"gitlab.add.subtitle.url" = "Gib die Basis-URL deiner GitLab-Instanz ein (gitlab.com oder eine self-hosted URL).";
+"gitlab.add.title.token" = "Authentifizieren";
+"gitlab.add.subtitle.token" = "Füge ein Personal Access Token mit den Scopes read_api, read_user, read_repository ein.";
+"gitlab.add.title.ready" = "Bereit zum Verbinden";
+"gitlab.add.subtitle.ready" = "Das Token wurde verifiziert. Klicke Verbinden, um diese Instanz zu speichern.";
+"gitlab.add.url.label" = "Instanz-URL";
+"gitlab.add.url.hint" = "Verwende die HTTPS-URL der GitLab-Weboberfläche (z.B. https://gitlab.mpsd.mpg.de).";
+"gitlab.add.pat.label" = "Personal Access Token";
+"gitlab.add.pat.openSettings" = "Token-Einstellungen öffnen";
+"gitlab.add.pat.scopes" = "Benötigte Scopes: read_api read_user read_repository";
+"gitlab.add.verified" = "Angemeldet als %@";
+"gitlab.add.button.continue" = "Weiter";
+"gitlab.add.button.verify" = "Verifizieren";
+"gitlab.add.button.connect" = "Verbinden";
+"gitlab.add.error.invalidURL" = "Bitte eine gültige https:// URL eingeben.";
+
+/* Remote-Tab Ergänzungen */
+"remote.allAccounts" = "Alle Accounts";
+"remote.archived" = "archiviert";
+
+/* GitHub-Auth Warten */
+"github.auth.waiting" = "Verbinde mit GitHub…";
