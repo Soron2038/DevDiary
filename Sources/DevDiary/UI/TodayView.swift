@@ -1,11 +1,14 @@
 import SwiftUI
+import AppKit
 
 /// Today's activity view showing sessions, commits and statistics
 struct TodayView: View {
     @State private var statistics: StatisticsService.DayStatistics?
+    @State private var weekStats: [StatisticsService.DayStatistics] = []
     @State private var commits: [Commit] = []
     @State private var sessions: [Session] = []
     @State private var projects: [UUID: Project] = [:]
+    @State private var sessionToProject: [UUID: Project] = [:] // sessionId -> Project
     @State private var isLoading = true
     
     var body: some View {
@@ -93,10 +96,39 @@ struct TodayView: View {
                         color: .red
                     )
                 }
+                
+                // Week overview
+                if !weekStats.isEmpty {
+                    weekOverview
+                }
             } else {
                 emptyState
             }
         }
+    }
+    
+    // MARK: - Week Overview
+    
+    private var weekOverview: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("today.weekOverview")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            HStack(alignment: .bottom, spacing: 4) {
+                ForEach(weekStats.reversed(), id: \.date) { dayStat in
+                    WeekDayBar(stat: dayStat, maxCommits: weekMaxCommits)
+                }
+            }
+            .frame(height: 50)
+        }
+        .padding(10)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .cornerRadius(8)
+    }
+    
+    private var weekMaxCommits: Int {
+        max(weekStats.map { $0.commitCount }.max() ?? 1, 1)
     }
     
     // MARK: - Sessions List
@@ -156,7 +188,7 @@ struct TodayView: View {
                 .frame(maxWidth: .infinity)
             } else {
                 List(commits, id: \.id) { commit in
-                    CommitRow(commit: commit)
+                    CommitRow(commit: commit, project: sessionToProject[commit.sessionId])
                 }
                 .listStyle(.plain)
             }
@@ -191,6 +223,7 @@ struct TodayView: View {
     private func loadData() {
         do {
             statistics = try StatisticsService.shared.getTodayStatistics()
+            weekStats = try StatisticsService.shared.getStatisticsForLastDays(7)
             commits = try DatabaseManager.shared.getCommitsForDate(Date())
                 .sorted { $0.timestamp > $1.timestamp }
             sessions = try DatabaseManager.shared.getSessionsForDate(Date())
@@ -199,6 +232,13 @@ struct TodayView: View {
             // Load projects for sessions
             let allProjects = try DatabaseManager.shared.getAllProjects()
             projects = Dictionary(uniqueKeysWithValues: allProjects.map { ($0.id, $0) })
+            
+            // Build sessionId -> Project mapping for commits
+            for session in sessions {
+                if let project = projects[session.projectId] {
+                    sessionToProject[session.id] = project
+                }
+            }
             
             isLoading = false
         } catch {
@@ -240,6 +280,67 @@ private struct StatCard: View {
             isHovered = hovering
         }
         .help(title)
+    }
+}
+
+private struct WeekDayBar: View {
+    let stat: StatisticsService.DayStatistics
+    let maxCommits: Int
+    
+    private let calendar = Calendar.current
+    
+    private var isToday: Bool {
+        calendar.isDateInToday(stat.date)
+    }
+    
+    private var barHeight: CGFloat {
+        guard maxCommits > 0 else { return 4 }
+        let ratio = CGFloat(stat.commitCount) / CGFloat(maxCommits)
+        return max(ratio * 40, stat.commitCount > 0 ? 4 : 2)
+    }
+    
+    var body: some View {
+        VStack(spacing: 2) {
+            // Bar
+            RoundedRectangle(cornerRadius: 2)
+                .fill(barColor)
+                .frame(width: 28, height: barHeight)
+            
+            // Day label
+            Text(dayLabel)
+                .font(.system(size: 9))
+                .foregroundColor(isToday ? .accentColor : .secondary)
+                .fontWeight(isToday ? .bold : .regular)
+        }
+        .help(tooltipText)
+    }
+    
+    private var barColor: Color {
+        if stat.commitCount == 0 {
+            return Color.secondary.opacity(0.2)
+        } else if isToday {
+            return Color.accentColor
+        } else {
+            return Color.accentColor.opacity(0.6)
+        }
+    }
+    
+    private var dayLabel: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E"
+        return String(formatter.string(from: stat.date).prefix(2))
+    }
+    
+    private var tooltipText: String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .medium
+        let dateStr = dateFormatter.string(from: stat.date)
+        
+        if stat.commitCount == 0 {
+            return "\(dateStr): \(String(localized: "today.week.noActivity"))"
+        } else {
+            return "\(dateStr): \(stat.commitCount) commits, \(stat.formattedDuration)"
+        }
     }
 }
 
@@ -310,7 +411,14 @@ private struct SessionRow: View {
 
 private struct CommitRow: View {
     let commit: Commit
+    let project: Project?
     @State private var isExpanded = false
+    @State private var isHovered = false
+    
+    private var gitHubURL: URL? {
+        guard let project = project else { return nil }
+        return GitService.shared.getGitHubCommitURL(hash: commit.hash, at: project.path)
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -346,6 +454,18 @@ private struct CommitRow: View {
                             .font(.caption)
                             .foregroundColor(.red)
                     }
+                    
+                    // GitHub link button (only visible on hover if available)
+                    if let url = gitHubURL {
+                        Button(action: { NSWorkspace.shared.open(url) }) {
+                            Image(systemName: "arrow.up.right.square")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .opacity(isHovered ? 1.0 : 0.0)
+                        .help(String(localized: "commit.openOnGitHub"))
+                    }
                 }
             }
             
@@ -359,6 +479,11 @@ private struct CommitRow: View {
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
         .onTapGesture {
             withAnimation(.easeInOut(duration: 0.2)) {
                 isExpanded.toggle()

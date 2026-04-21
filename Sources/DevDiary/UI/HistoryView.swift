@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 /// History view with date navigation and daily statistics
 struct HistoryView: View {
@@ -6,6 +7,9 @@ struct HistoryView: View {
     @State private var statistics: [StatisticsService.DayStatistics] = []
     @State private var selectedDayStats: StatisticsService.DayStatistics?
     @State private var dayCommits: [Commit] = []
+    @State private var daySessions: [Session] = []
+    @State private var projects: [UUID: Project] = [:]
+    @State private var sessionToProject: [UUID: Project] = [:]
     @State private var isLoading = true
     
     private let calendar = Calendar.current
@@ -101,7 +105,7 @@ struct HistoryView: View {
                         .frame(maxWidth: .infinity)
                     } else {
                         List(dayCommits, id: \.id) { commit in
-                            HistoryCommitRow(commit: commit)
+                            HistoryCommitRow(commit: commit, project: sessionToProject[commit.sessionId])
                         }
                         .listStyle(.plain)
                     }
@@ -167,9 +171,23 @@ struct HistoryView: View {
             selectedDayStats = try StatisticsService.shared.getStatisticsForDate(selectedDate)
             dayCommits = try DatabaseManager.shared.getCommitsForDate(selectedDate)
                 .sorted { $0.timestamp > $1.timestamp }
+            daySessions = try DatabaseManager.shared.getSessionsForDate(selectedDate)
+            
+            // Load projects
+            let allProjects = try DatabaseManager.shared.getAllProjects()
+            projects = Dictionary(uniqueKeysWithValues: allProjects.map { ($0.id, $0) })
+            
+            // Build sessionId -> Project mapping
+            sessionToProject = [:]
+            for session in daySessions {
+                if let project = projects[session.projectId] {
+                    sessionToProject[session.id] = project
+                }
+            }
         } catch {
             selectedDayStats = nil
             dayCommits = []
+            daySessions = []
         }
     }
 }
@@ -235,6 +253,14 @@ private struct DayRow: View {
 
 private struct HistoryCommitRow: View {
     let commit: Commit
+    let project: Project?
+    
+    @State private var isHovered = false
+    
+    private var gitHubURL: URL? {
+        guard let project = project else { return nil }
+        return GitService.shared.getGitHubCommitURL(hash: commit.hash, at: project.path)
+    }
     
     var body: some View {
         HStack(alignment: .top) {
@@ -265,7 +291,25 @@ private struct HistoryCommitRow: View {
             }
             
             Spacer()
+            
+            // GitHub link button (visible on hover)
+            if let url = gitHubURL {
+                Button(action: { NSWorkspace.shared.open(url) }) {
+                    Image(systemName: "arrow.up.right.square")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .opacity(isHovered ? 1.0 : 0.0)
+                .help(String(localized: "commit.openOnGitHub"))
+            }
         }
         .padding(.vertical, 4)
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
     }
 }
