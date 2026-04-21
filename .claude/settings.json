@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcode-select -p)",
+      "Bash(xcodebuild -version)",
+      "Read(//Applications/Xcode.app/Contents/Developer/usr/bin/**)"
+    ]
+  }
+}
