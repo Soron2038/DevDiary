@@ -3,7 +3,7 @@ import SwiftUI
 /// Main dashboard view with tab navigation
 struct DashboardView: View {
     @State private var selectedTab = 0
-    
+
     var body: some View {
         TabView(selection: $selectedTab) {
             TodayView()
@@ -11,31 +11,31 @@ struct DashboardView: View {
                     Label("dashboard.tab.today", systemImage: "calendar")
                 }
                 .tag(0)
-            
+
             HistoryView()
                 .tabItem {
                     Label("dashboard.tab.history", systemImage: "clock.arrow.circlepath")
                 }
                 .tag(1)
-            
+
             ReportsView()
                 .tabItem {
                     Label("dashboard.tab.reports", systemImage: "doc.text")
                 }
                 .tag(2)
-            
+
             ProjectsView()
                 .tabItem {
                     Label("dashboard.tab.projects", systemImage: "folder")
                 }
                 .tag(3)
-            
-            GitHubView()
+
+            GitView()
                 .tabItem {
-                    Label("dashboard.tab.github", systemImage: "arrow.triangle.pull")
+                    Label("dashboard.tab.git", systemImage: "arrow.triangle.branch")
                 }
                 .tag(4)
-            
+
             SettingsView()
                 .tabItem {
                     Label("dashboard.tab.settings", systemImage: "gear")

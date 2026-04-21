@@ -283,3 +283,70 @@
 "report.footer" = "Generated with";
 "report.error.invalidRange" = "Invalid date range";
 "report.error.noData" = "No data for this period";
+
+/* Git Tab (unified PR/MR + Issues across all providers) */
+"dashboard.tab.git" = "Git";
+"git.prs.title" = "Pull/Merge Requests";
+"git.prs.empty" = "No open pull/merge requests";
+"git.issues.title" = "Assigned Issues";
+"git.issues.empty" = "No assigned issues";
+"git.refresh" = "Refresh";
+"git.openInBrowser" = "Open in browser";
+"git.draft" = "Draft";
+"git.notConnected" = "No account connected";
+"git.notConnected.hint" = "Connect GitHub or add a GitLab instance in Settings → Accounts.";
+"git.openAccounts" = "Open Accounts…";
+"git.tokenExpired.title" = "Session Expired";
+"git.tokenExpired.message" = "One of your forge connections is no longer valid. Please reconnect in Settings → Accounts.";
+
+/* Accounts Sheet */
+"button.done" = "Done";
+"accounts.title" = "Accounts";
+"accounts.addGitLab" = "Add GitLab instance";
+"accounts.notConnected" = "Not connected";
+"accounts.connect" = "Connect";
+"accounts.disconnect" = "Disconnect";
+"accounts.connected" = "Connected";
+"accounts.connectedAs" = "Connected as %@";
+"accounts.remove.help" = "Remove this GitLab instance";
+"accounts.banner.gitlabAdded" = "GitLab instance %@ added";
+"accounts.banner.removed" = "%@ removed";
+"accounts.deleteAllTokens" = "Delete all tokens";
+"accounts.deleteAllTokens.confirm.title" = "Delete all stored tokens?";
+"accounts.deleteAllTokens.confirm.message" = "Removes every GitHub and GitLab token from the Keychain. Account metadata is kept; you can reconnect afterwards.";
+"accounts.deleteAllTokens.confirm.delete" = "Delete all";
+"accounts.github.environment" = "Environment:";
+"accounts.github.environment.dev" = "Development";
+"accounts.github.environment.prod" = "Production";
+"accounts.github.configureClientId" = "Configure Client ID…";
+
+/* Settings → Accounts (redirect-style entry) */
+"settings.accounts.manage" = "Manage Accounts…";
+"settings.accounts.summary.title" = "Connected providers";
+"settings.accounts.summary.none" = "No provider connected.";
+"settings.accounts.summary.status" = "%d of %d accounts connected";
+
+/* Add GitLab Instance Sheet */
+"gitlab.add.title.url" = "Add GitLab instance";
+"gitlab.add.subtitle.url" = "Enter the base URL of your GitLab instance (gitlab.com or a self-hosted URL).";
+"gitlab.add.title.token" = "Authenticate";
+"gitlab.add.subtitle.token" = "Paste a Personal Access Token with scopes: read_api, read_user, read_repository.";
+"gitlab.add.title.ready" = "Ready to connect";
+"gitlab.add.subtitle.ready" = "We verified the token. Click Connect to save this instance.";
+"gitlab.add.url.label" = "Instance URL";
+"gitlab.add.url.hint" = "Use the HTTPS URL of the GitLab web interface (e.g., https://gitlab.mpsd.mpg.de).";
+"gitlab.add.pat.label" = "Personal Access Token";
+"gitlab.add.pat.openSettings" = "Open token settings page";
+"gitlab.add.pat.scopes" = "Required scopes: read_api read_user read_repository";
+"gitlab.add.verified" = "Signed in as %@";
+"gitlab.add.button.continue" = "Continue";
+"gitlab.add.button.verify" = "Verify";
+"gitlab.add.button.connect" = "Connect";
+"gitlab.add.error.invalidURL" = "Please enter a valid https:// URL.";
+
+/* Remote tab additions */
+"remote.allAccounts" = "All accounts";
+"remote.archived" = "archived";
+
+/* GitHub auth waiting */
+"github.auth.waiting" = "Connecting to GitHub…";

@@ -3,9 +3,12 @@ import AppKit
 import SwiftUI
 import os.log
 
-/// GitHub integration using OAuth 2.0 Device Authorization Grant (Device Flow)
+/// GitHub integration using OAuth 2.0 Device Authorization Grant (Device Flow).
 /// No client secret required; users authorize in the browser with a user code.
-final class GitHubService {
+///
+/// Conforms to `RemoteForgeProvider` so GitHub can be used alongside GitLab
+/// instances through a single aggregating pipeline.
+final class GitHubService: RemoteForgeProvider {
     static let shared = GitHubService()
     private let logger = Logger(subsystem: "com.devdiary", category: "GitHub")
 
@@ -14,10 +17,22 @@ final class GitHubService {
     }
 
     // Keychain constants
-    private let keychainService = "DevDiary.GitHub"
+    static let keychainService = "DevDiary.GitHub"
+    private let keychainService: String
     private let legacyTokenAccount = "access_token"
 
     private let envDefaultsKey = "GitEnvironment"
+
+    var account: ForgeAccount {
+        ForgeRegistry.shared.account(id: ForgeAccount.gitHubAccountID)
+            ?? ForgeAccount(
+                id: ForgeAccount.gitHubAccountID,
+                kind: .github,
+                displayName: "GitHub",
+                baseURL: URL(string: "https://api.github.com")!,
+                username: nil
+            )
+    }
 
     var selectedEnvironment: GitEnvironment {
         if let raw = UserDefaults.standard.string(forKey: envDefaultsKey), let env = GitEnvironment(rawValue: raw) {
@@ -40,25 +55,27 @@ final class GitHubService {
     //   DEV_DIARY_GITHUB_CLIENT_ID_DEV / _PROD, then DEV_DIARY_GITHUB_CLIENT_ID, then GITHUB_CLIENT_ID
     var clientId: String? {
         let env = selectedEnvironment
-        // 1) User-configured per-environment Client ID
         if let configured = UserDefaults.standard.string(forKey: "GitHubClientID.\(env.rawValue)"), !configured.isEmpty {
             return configured
         }
-        // 2) Environment variables
         let procEnv = ProcessInfo.processInfo.environment
         let perEnvKey = env == .dev ? "DEV_DIARY_GITHUB_CLIENT_ID_DEV" : "DEV_DIARY_GITHUB_CLIENT_ID_PROD"
         return procEnv[perEnvKey] ?? procEnv["DEV_DIARY_GITHUB_CLIENT_ID"] ?? procEnv["GITHUB_CLIENT_ID"]
     }
 
-    private init() {}
+    private init() {
+        self.keychainService = GitHubService.keychainService
+    }
 
-    // MARK: - Public API
+    // MARK: - Client ID
 
     func saveClientId(_ value: String?) {
         let trimmed = (value ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let key = "GitHubClientID.\(selectedEnvironment.rawValue)"
         UserDefaults.standard.set(trimmed, forKey: key)
     }
+
+    // MARK: - Device Flow Types
 
     struct DeviceCode: Decodable {
         let device_code: String
@@ -80,6 +97,7 @@ final class GitHubService {
         case invalidURL
         case accessDenied
         case expired
+        case notConnected
         case unknown(String)
 
         var errorDescription: String? {
@@ -92,11 +110,15 @@ final class GitHubService {
                 return "Access was denied by the user."
             case .expired:
                 return "Device code expired."
+            case .notConnected:
+                return "Not connected to GitHub."
             case .unknown(let msg):
                 return msg
             }
         }
     }
+
+    // MARK: - Connection State
 
     var isConnected: Bool {
         hasToken(for: selectedEnvironment)
@@ -107,7 +129,6 @@ final class GitHubService {
     }
 
     func hasToken(for env: GitEnvironment) -> Bool {
-        // Check per-env token first, fallback to legacy
         if let _ = try? KeychainService.shared.getPassword(service: keychainService, account: tokenAccount(for: env)) {
             return true
         }
@@ -118,13 +139,11 @@ final class GitHubService {
     }
 
     func disconnect() throws {
-        // Delete token for current environment and legacy
         try? KeychainService.shared.deletePassword(service: keychainService, account: tokenAccount(for: selectedEnvironment))
         try? KeychainService.shared.deletePassword(service: keychainService, account: legacyTokenAccount)
     }
 
     func disconnectAll() {
-        // Remove tokens for both envs and legacy
         try? KeychainService.shared.deletePassword(service: keychainService, account: tokenAccount(for: .dev))
         try? KeychainService.shared.deletePassword(service: keychainService, account: tokenAccount(for: .prod))
         try? KeychainService.shared.deletePassword(service: keychainService, account: legacyTokenAccount)
@@ -132,11 +151,9 @@ final class GitHubService {
 
     func currentAccessToken() -> String? {
         do {
-            // Prefer current environment token
             if let data = try KeychainService.shared.getPassword(service: keychainService, account: tokenAccount(for: selectedEnvironment)) {
                 return String(data: data, encoding: .utf8)
             }
-            // Fallback to legacy account
             if let data = try KeychainService.shared.getPassword(service: keychainService, account: legacyTokenAccount) {
                 return String(data: data, encoding: .utf8)
             }
@@ -146,19 +163,17 @@ final class GitHubService {
         return nil
     }
 
-    // Begin the device flow: returns instructions for the user
+    // MARK: - Device Flow
+
     func beginDeviceFlow(scopes: String = "repo read:user") async throws -> DeviceCode {
         FileLogger.shared.log("beginDeviceFlow called, scopes=\(scopes)")
         guard let clientId else {
             FileLogger.shared.log("ERROR: No client ID configured")
             throw AuthError.missingClientId
         }
-        FileLogger.shared.log("Using clientId: \(clientId.prefix(8))...")
         guard let url = URL(string: "https://github.com/login/device/code") else { throw AuthError.invalidURL }
 
-        // URL-encode the scope (spaces → %20)
         let encodedScope = scopes.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? scopes
-        FileLogger.shared.log("Encoded scope: \(encodedScope)")
 
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
@@ -167,32 +182,19 @@ final class GitHubService {
         req.httpBody = body.data(using: .utf8)
         req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
 
-        FileLogger.shared.log("Sending POST to \(url.absoluteString)")
         let (data, resp) = try await URLSession.shared.data(for: req)
         guard let http = resp as? HTTPURLResponse else {
-            FileLogger.shared.log("ERROR: No HTTP response object")
             throw AuthError.unknown("No HTTP response")
         }
         let responseText = String(data: data, encoding: .utf8) ?? "<no body>"
-        FileLogger.shared.log("Response status=\(http.statusCode), body=\(responseText)")
-        logger.info("Device code response (\(http.statusCode)): \(responseText)")
-        
+        FileLogger.shared.log("Device code response status=\(http.statusCode)")
+
         guard http.statusCode == 200 else {
-            FileLogger.shared.log("ERROR: Non-200 status")
-            logger.error("Device code request failed: \(responseText)")
             throw AuthError.unknown("GitHub error (\(http.statusCode)): \(responseText)")
         }
-        do {
-            let device = try JSONDecoder().decode(DeviceCode.self, from: data)
-            FileLogger.shared.log("SUCCESS: Got device code, user_code=\(device.user_code)")
-            return device
-        } catch {
-            FileLogger.shared.log("ERROR decoding DeviceCode: \(error)")
-            throw error
-        }
+        return try JSONDecoder().decode(DeviceCode.self, from: data)
     }
 
-    // Poll for access token, saves token in Keychain on success
     func pollForToken(deviceCode: String, interval: Int) async throws {
         FileLogger.shared.log("pollForToken started, interval=\(interval)")
         guard let clientId else { throw AuthError.missingClientId }
@@ -213,20 +215,13 @@ final class GitHubService {
 
             let (data, resp) = try await URLSession.shared.data(for: req)
             guard let http = resp as? HTTPURLResponse else { continue }
-            
-            let responseText = String(data: data, encoding: .utf8) ?? "<no body>"
-            FileLogger.shared.log("Poll #\(pollCount): status=\(http.statusCode), body=\(responseText)")
 
-            // GitHub returns 200 for BOTH success AND pending/error states!
-            // First check if this is an error response
             if let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any], let err = obj["error"] as? String {
-                FileLogger.shared.log("Poll #\(pollCount): error=\(err)")
                 switch err {
                 case "authorization_pending":
-                    continue // keep polling - user hasn't authorized yet
+                    continue
                 case "slow_down":
                     currentInterval += 5
-                    FileLogger.shared.log("Slowing down, new interval=\(currentInterval)")
                     continue
                 case "expired_token":
                     throw AuthError.expired
@@ -236,29 +231,38 @@ final class GitHubService {
                     throw AuthError.unknown(err)
                 }
             }
-            
-            // No error field - try to decode the token
+
             if http.statusCode == 200 {
                 do {
                     let token = try JSONDecoder().decode(AccessTokenResponse.self, from: data)
-                    FileLogger.shared.log("SUCCESS: Got access token")
                     let account = tokenAccount(for: selectedEnvironment)
                     try KeychainService.shared.setPassword(Data(token.access_token.utf8), service: keychainService, account: account)
                     logger.info("GitHub token stored in Keychain for env \(self.selectedEnvironment.rawValue)")
                     return
                 } catch {
-                    FileLogger.shared.log("Failed to decode token response: \(error)")
+                    let responseText = String(data: data, encoding: .utf8) ?? "<no body>"
                     throw AuthError.unknown("Invalid token response: \(responseText)")
                 }
             } else {
+                let responseText = String(data: data, encoding: .utf8) ?? "<no body>"
                 throw AuthError.unknown("HTTP \(http.statusCode): \(responseText)")
             }
         }
     }
 
-    // Fetch current user login to show connected identity
+    func openInBrowser(_ urlString: String) {
+        guard let url = URL(string: urlString) else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    // MARK: - RemoteForgeProvider
+
+    func verifyCredentials() async throws -> String {
+        try await fetchCurrentUserLogin()
+    }
+
     func fetchCurrentUserLogin() async throws -> String {
-        guard let token = currentAccessToken() else { throw AuthError.unknown("No token") }
+        guard let token = currentAccessToken() else { throw AuthError.notConnected }
         guard let url = URL(string: "https://api.github.com/user") else { throw AuthError.invalidURL }
         var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -274,317 +278,270 @@ final class GitHubService {
         return user.login
     }
 
-    // Open verification URI in the user's default browser
-    func openInBrowser(_ urlString: String) {
-        guard let url = URL(string: urlString) else { return }
-        NSWorkspace.shared.open(url)
-    }
-    
-    // MARK: - Workflow Status
-    
-    /// Status of the latest GitHub Actions workflow run
-    enum WorkflowRunStatus: String {
-        case success
-        case failure
-        case pending      // queued, in_progress, waiting
-        case cancelled
-        case skipped
-        case unknown
-        case noWorkflows  // Repository has no workflows
-        
-        var color: Color {
-            switch self {
-            case .success: return .green
-            case .failure: return .red
-            case .pending: return .orange
-            case .cancelled, .skipped: return .gray
-            case .unknown, .noWorkflows: return .secondary
-            }
-        }
-        
-        var icon: String {
-            switch self {
-            case .success: return "checkmark.circle.fill"
-            case .failure: return "xmark.circle.fill"
-            case .pending: return "clock.fill"
-            case .cancelled: return "nosign"
-            case .skipped: return "arrow.right.circle"
-            case .unknown: return "questionmark.circle"
-            case .noWorkflows: return "minus.circle"
-            }
-        }
-        
-        var localizationKey: String {
-            "workflow.status.\(rawValue)"
-        }
-    }
-    
-    /// Fetch the status of the latest workflow run for a repository
-    func fetchLatestWorkflowStatus(owner: String, repo: String) async throws -> WorkflowRunStatus {
-        guard let token = currentAccessToken() else { throw AuthError.unknown("Not connected to GitHub") }
-        
-        guard let url = URL(string: "https://api.github.com/repos/\(owner)/\(repo)/actions/runs?per_page=1") else {
-            throw AuthError.invalidURL
-        }
-        
-        var req = URLRequest(url: url)
-        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-        
-        let (data, resp) = try await URLSession.shared.data(for: req)
-        guard let http = resp as? HTTPURLResponse else {
-            throw AuthError.unknown("No HTTP response")
-        }
-        
-        // 404 means repo might not have actions enabled or doesn't exist
-        if http.statusCode == 404 {
-            return .noWorkflows
-        }
-        
-        guard http.statusCode == 200 else {
-            return .unknown
-        }
-        
-        // Parse response
-        struct WorkflowRunsResponse: Decodable {
-            let total_count: Int
-            let workflow_runs: [WorkflowRun]
-        }
-        
-        struct WorkflowRun: Decodable {
-            let status: String       // queued, in_progress, completed, etc.
-            let conclusion: String?  // success, failure, cancelled, skipped, etc. (only when completed)
-        }
-        
-        let response = try JSONDecoder().decode(WorkflowRunsResponse.self, from: data)
-        
-        if response.workflow_runs.isEmpty {
-            return .noWorkflows
-        }
-        
-        let run = response.workflow_runs[0]
-        
-        // If not completed, it's pending
-        if run.status != "completed" {
-            return .pending
-        }
-        
-        // Map conclusion to status
-        switch run.conclusion?.lowercased() {
-        case "success":
-            return .success
-        case "failure", "timed_out":
-            return .failure
-        case "cancelled":
-            return .cancelled
-        case "skipped":
-            return .skipped
-        default:
-            return .unknown
-        }
-    }
-    
-    /// Fetch workflow statuses for multiple repositories in parallel
-    func fetchWorkflowStatuses(for repositories: [GitHubRepository]) async -> [Int: WorkflowRunStatus] {
-        var statuses: [Int: WorkflowRunStatus] = [:]
-        
-        await withTaskGroup(of: (Int, WorkflowRunStatus).self) { group in
-            for repo in repositories {
-                group.addTask {
-                    let parts = repo.fullName.split(separator: "/")
-                    guard parts.count == 2 else { return (repo.id, .unknown) }
-                    let owner = String(parts[0])
-                    let repoName = String(parts[1])
-                    
-                    do {
-                        let status = try await self.fetchLatestWorkflowStatus(owner: owner, repo: repoName)
-                        return (repo.id, status)
-                    } catch {
-                        return (repo.id, .unknown)
-                    }
-                }
-            }
-            
-            for await (repoId, status) in group {
-                statuses[repoId] = status
-            }
-        }
-        
-        return statuses
-    }
-    
-    // MARK: - Pull Requests API
-    
-    /// Fetch open pull requests for the current user (authored or review requested)
-    func fetchUserPullRequests() async throws -> [GitHubPullRequest] {
-        guard let token = currentAccessToken() else { throw AuthError.unknown("Not connected to GitHub") }
-        
-        // Get current username first
+    func listAssignedMergeRequests() async throws -> [ForgeMergeRequest] {
+        guard let token = currentAccessToken() else { throw AuthError.notConnected }
         let username = try await fetchCurrentUserLogin()
-        
+
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        
-        var allPRs: [GitHubPullRequest] = []
-        var seenIds = Set<Int>()
-        
-        // Search for PRs authored by user
-        let authorQuery = "is:pr is:open author:\(username)"
-        if let authorPRs = try? await searchPullRequests(query: authorQuery, token: token, decoder: decoder) {
-            for pr in authorPRs where !seenIds.contains(pr.id) {
-                allPRs.append(pr)
-                seenIds.insert(pr.id)
+
+        var all: [ForgeMergeRequest] = []
+        var seen = Set<String>()
+
+        func runQuery(_ q: String) async throws {
+            let encoded = q.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? q
+            guard let url = URL(string: "https://api.github.com/search/issues?q=\(encoded)&sort=updated&order=desc&per_page=50") else {
+                throw AuthError.invalidURL
+            }
+            var req = URLRequest(url: url)
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            guard let http = resp as? HTTPURLResponse, http.statusCode == 200 else {
+                let text = String(data: data, encoding: .utf8) ?? "<no body>"
+                throw AuthError.unknown("GitHub API error: \(text)")
+            }
+            let response = try decoder.decode(SearchResponse<SearchIssue>.self, from: data)
+            for item in response.items {
+                let forgeId = ForgeRepository.makeId(accountId: account.id, remoteId: "\(item.id)")
+                if seen.contains(forgeId) { continue }
+                seen.insert(forgeId)
+                all.append(ForgeMergeRequest(
+                    id: forgeId,
+                    providerAccountId: account.id,
+                    providerKind: .github,
+                    number: item.number,
+                    title: item.title,
+                    webURL: item.html_url,
+                    isDraft: item.draft ?? false,
+                    createdAt: item.created_at,
+                    updatedAt: item.updated_at,
+                    authorLogin: item.user?.login ?? "",
+                    authorAvatarURL: item.user?.avatar_url,
+                    repoFullName: item.repoFullName
+                ))
             }
         }
-        
-        // Search for PRs where review is requested
-        let reviewQuery = "is:pr is:open review-requested:\(username)"
-        if let reviewPRs = try? await searchPullRequests(query: reviewQuery, token: token, decoder: decoder) {
-            for pr in reviewPRs where !seenIds.contains(pr.id) {
-                allPRs.append(pr)
-                seenIds.insert(pr.id)
-            }
-        }
-        
-        // Sort by updated date
-        return allPRs.sorted { $0.updatedAt > $1.updatedAt }
+
+        // Authored by user
+        try? await runQuery("is:pr is:open author:\(username)")
+        // Review requested from user
+        try? await runQuery("is:pr is:open review-requested:\(username)")
+
+        return all.sorted { $0.updatedAt > $1.updatedAt }
     }
-    
-    private func searchPullRequests(query: String, token: String, decoder: JSONDecoder) async throws -> [GitHubPullRequest] {
-        let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
-        
-        guard let url = URL(string: "https://api.github.com/search/issues?q=\(encodedQuery)&sort=updated&order=desc&per_page=50") else {
-            throw AuthError.invalidURL
-        }
-        
-        var req = URLRequest(url: url)
-        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-        
-        let (data, resp) = try await URLSession.shared.data(for: req)
-        guard let http = resp as? HTTPURLResponse else {
-            throw AuthError.unknown("No HTTP response")
-        }
-        
-        guard http.statusCode == 200 else {
-            let text = String(data: data, encoding: .utf8) ?? "<no body>"
-            logger.error("Fetch PRs failed: \(text)")
-            throw AuthError.unknown("GitHub API error (\(http.statusCode))")
-        }
-        
-        let response = try decoder.decode(GitHubSearchResponse<GitHubPullRequest>.self, from: data)
-        return response.items
-    }
-    
-    // MARK: - Issues API
-    
-    /// Fetch issues assigned to the current user
-    func fetchAssignedIssues() async throws -> [GitHubIssue] {
-        guard let token = currentAccessToken() else { throw AuthError.unknown("Not connected to GitHub") }
-        
+
+    func listAssignedIssues() async throws -> [ForgeIssue] {
+        guard let token = currentAccessToken() else { throw AuthError.notConnected }
         guard let url = URL(string: "https://api.github.com/issues?filter=assigned&state=open&sort=updated&direction=desc&per_page=50") else {
             throw AuthError.invalidURL
         }
-        
         var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-        
+
         let (data, resp) = try await URLSession.shared.data(for: req)
-        guard let http = resp as? HTTPURLResponse else {
-            throw AuthError.unknown("No HTTP response")
-        }
-        
-        guard http.statusCode == 200 else {
+        guard let http = resp as? HTTPURLResponse, http.statusCode == 200 else {
             let text = String(data: data, encoding: .utf8) ?? "<no body>"
-            logger.error("Fetch issues failed: \(text)")
-            throw AuthError.unknown("GitHub API error (\(http.statusCode))")
+            throw AuthError.unknown("GitHub API error: \(text)")
         }
-        
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        
-        // Filter out pull requests (GitHub returns PRs as issues too)
-        let allIssues = try decoder.decode([GitHubIssue].self, from: data)
-        return allIssues.filter { issue in
-            // PRs have a pull_request key, but our model doesn't include it
-            // We check the HTML URL instead - PRs have /pull/ in the URL
-            !issue.htmlURL.contains("/pull/")
+        let items = try decoder.decode([IssueDTO].self, from: data)
+
+        return items.compactMap { item in
+            // /issues returns PRs too; filter by URL.
+            if item.html_url.contains("/pull/") { return nil }
+            let labels = item.labels.map { lbl in
+                ForgeLabel(id: "\(lbl.id)", name: lbl.name, hexColor: lbl.color)
+            }
+            return ForgeIssue(
+                id: ForgeRepository.makeId(accountId: account.id, remoteId: "\(item.id)"),
+                providerAccountId: account.id,
+                providerKind: .github,
+                number: item.number,
+                title: item.title,
+                webURL: item.html_url,
+                createdAt: item.created_at,
+                updatedAt: item.updated_at,
+                authorLogin: item.user?.login ?? "",
+                labels: labels,
+                repoFullName: item.repoFullName
+            )
         }
     }
-    
-    // MARK: - Repository API
-    
-    /// Fetch all repositories for the authenticated user
-    /// - Parameters:
-    ///   - includeArchived: Whether to include archived repos (default: false)
-    ///   - includeForks: Whether to include forked repos (default: true)
-    /// - Returns: Array of repositories sorted by last update
-    func fetchRepositories(includeArchived: Bool = false, includeForks: Bool = true) async throws -> [GitHubRepository] {
-        guard let token = currentAccessToken() else { throw AuthError.unknown("Not connected to GitHub") }
-        
-        var allRepos: [GitHubRepository] = []
+
+    func listRepositories(includeArchived: Bool, includeForks: Bool) async throws -> [ForgeRepository] {
+        guard let token = currentAccessToken() else { throw AuthError.notConnected }
+
+        var allRepos: [RepositoryDTO] = []
         var page = 1
         let perPage = 100
-        
+
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        
+
         while true {
             guard let url = URL(string: "https://api.github.com/user/repos?per_page=\(perPage)&page=\(page)&sort=updated&direction=desc") else {
                 throw AuthError.invalidURL
             }
-            
             var req = URLRequest(url: url)
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-            
             let (data, resp) = try await URLSession.shared.data(for: req)
             guard let http = resp as? HTTPURLResponse else {
                 throw AuthError.unknown("No HTTP response")
             }
-            
-            if http.statusCode == 401 {
-                throw AuthError.unknown("Token expired or invalid")
-            }
-            
+            if http.statusCode == 401 { throw AuthError.unknown("Token expired or invalid") }
             guard http.statusCode == 200 else {
                 let text = String(data: data, encoding: .utf8) ?? "<no body>"
-                logger.error("Fetch repos failed: \(text)")
-                throw AuthError.unknown("GitHub API error (\(http.statusCode))")
+                throw AuthError.unknown("GitHub API error (\(http.statusCode)): \(text)")
             }
-            
-            let repos = try decoder.decode([GitHubRepository].self, from: data)
-            
-            if repos.isEmpty {
-                break
-            }
-            
+            let repos = try decoder.decode([RepositoryDTO].self, from: data)
+            if repos.isEmpty { break }
             allRepos.append(contentsOf: repos)
-            
-            // GitHub returns fewer items than perPage when we've reached the last page
-            if repos.count < perPage {
-                break
-            }
-            
+            if repos.count < perPage { break }
             page += 1
-            
-            // Safety limit to prevent infinite loops
-            if page > 20 {
-                logger.warning("Reached page limit while fetching repositories")
-                break
-            }
+            if page > 20 { break }
         }
-        
-        // Filter based on parameters
-        var filtered = allRepos
-        if !includeArchived {
-            filtered = filtered.filter { !$0.isArchived }
+
+        let filtered = allRepos.filter { repo in
+            (includeArchived || !repo.archived) && (includeForks || !repo.fork)
         }
-        if !includeForks {
-            filtered = filtered.filter { !$0.isFork }
+        return filtered.map { map(repo: $0) }
+    }
+
+    func ciStatus(for repository: ForgeRepository) async throws -> ForgeCIStatus {
+        guard repository.providerAccountId == account.id else { return .unknown }
+        guard let token = currentAccessToken() else { throw AuthError.notConnected }
+
+        let parts = repository.fullName.split(separator: "/")
+        guard parts.count == 2 else { return .unknown }
+        let owner = String(parts[0])
+        let repoName = String(parts[1])
+
+        guard let url = URL(string: "https://api.github.com/repos/\(owner)/\(repoName)/actions/runs?per_page=1") else {
+            throw AuthError.invalidURL
         }
-        
-        return filtered
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard let http = resp as? HTTPURLResponse else { return .unknown }
+        if http.statusCode == 404 { return .noWorkflows }
+        guard http.statusCode == 200 else { return .unknown }
+
+        struct RunsResp: Decodable { let workflow_runs: [Run] }
+        struct Run: Decodable { let status: String; let conclusion: String? }
+
+        let response = try JSONDecoder().decode(RunsResp.self, from: data)
+        guard let run = response.workflow_runs.first else { return .noWorkflows }
+        if run.status != "completed" { return .pending }
+        switch run.conclusion?.lowercased() {
+        case "success": return .success
+        case "failure", "timed_out": return .failure
+        case "cancelled": return .cancelled
+        case "skipped": return .skipped
+        default: return .unknown
+        }
+    }
+
+    // MARK: - Internal DTOs
+
+    private struct SearchResponse<T: Decodable>: Decodable {
+        let total_count: Int
+        let items: [T]
+    }
+
+    private struct UserDTO: Decodable {
+        let login: String
+        let avatar_url: String?
+    }
+
+    private struct SearchIssue: Decodable {
+        let id: Int
+        let number: Int
+        let title: String
+        let html_url: String
+        let draft: Bool?
+        let created_at: Date
+        let updated_at: Date
+        let user: UserDTO?
+        let repository_url: String?
+
+        var repoFullName: String {
+            guard let url = repository_url else { return "" }
+            let parts = url.split(separator: "/")
+            guard parts.count >= 2 else { return "" }
+            return "\(parts[parts.count - 2])/\(parts[parts.count - 1])"
+        }
+    }
+
+    private struct IssueDTO: Decodable {
+        let id: Int
+        let number: Int
+        let title: String
+        let html_url: String
+        let created_at: Date
+        let updated_at: Date
+        let user: UserDTO?
+        let labels: [LabelDTO]
+        let repository_url: String?
+
+        struct LabelDTO: Decodable {
+            let id: Int
+            let name: String
+            let color: String
+        }
+
+        var repoFullName: String {
+            guard let url = repository_url else { return "Unknown" }
+            let parts = url.split(separator: "/")
+            guard parts.count >= 2 else { return "Unknown" }
+            return "\(parts[parts.count - 2])/\(parts[parts.count - 1])"
+        }
+    }
+
+    private struct RepositoryDTO: Decodable {
+        let id: Int
+        let name: String
+        let full_name: String
+        let description: String?
+        let `private`: Bool
+        let html_url: String
+        let clone_url: String
+        let ssh_url: String?
+        let default_branch: String?
+        let updated_at: Date
+        let pushed_at: Date?
+        let language: String?
+        let stargazers_count: Int
+        let forks_count: Int
+        let archived: Bool
+        let fork: Bool
+    }
+
+    private func map(repo: RepositoryDTO) -> ForgeRepository {
+        ForgeRepository(
+            id: ForgeRepository.makeId(accountId: account.id, remoteId: "\(repo.id)"),
+            providerAccountId: account.id,
+            remoteId: "\(repo.id)",
+            name: repo.name,
+            fullName: repo.full_name,
+            description: repo.description,
+            isPrivate: repo.`private`,
+            webURL: repo.html_url,
+            cloneURL: repo.clone_url,
+            sshURL: repo.ssh_url,
+            defaultBranch: repo.default_branch,
+            updatedAt: repo.updated_at,
+            pushedAt: repo.pushed_at,
+            language: repo.language,
+            stars: repo.stargazers_count,
+            forks: repo.forks_count,
+            isArchived: repo.archived,
+            isFork: repo.fork
+        )
     }
 }
